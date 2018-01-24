@@ -1,0 +1,87 @@
+<template>
+  <div class="editaddress">
+      <ul class="address-wrp">
+          <li>收货人<input type="text"></li>
+          <li>手机号<input type="text"></li>
+          <li>省市区<i class="iconfont icon-right"></i></li>
+          <li>详细地址<textarea name="" id=""></textarea></li>
+      </ul>
+      <p class="delete">删除地址</p>
+      <div class="preserved">保存</div>
+  </div>
+</template>
+
+<script>
+export default {
+  data(){
+      return{
+
+      }
+  }
+}
+</script>
+
+<style scoped>
+.editaddress{
+    background: #f7f7f7;
+}
+.address-wrp{
+    padding: 0 .32rem;
+    background: #fff;
+    overflow: hidden;
+    margin-bottom: .2rem;
+}
+.address-wrp>li{
+    height: 1.2rem;
+    line-height: 1.2rem;
+    font-size: .4rem;
+    border-bottom: 1px solid #f2f2f2
+}
+.address-wrp>li>input{
+    background: #f7f7f7;
+    border: none;
+    margin-left: .2rem;
+    padding-left: .2rem;
+    height: .6rem;
+    width: 7.5rem
+}
+.address-wrp>li>i{
+    float: right;
+}
+.address-wrp>li:last-child{
+   overflow: hidden;
+   height: auto;
+
+}
+.address-wrp>li>textarea{
+    
+    margin-left: 1.5rem;
+    width: 7.8rem;
+    height: 2rem;
+    border: none;
+    background: #f7f7f7;
+    box-sizing: border-box;
+    padding: .2rem;
+}
+.delete{
+    height: 1rem;
+    line-height: 1rem;
+    color: #ec1019;
+    background: #fff;
+    font-size: .4rem;
+    padding: 0 .32rem;
+    border-top: 1px solid #f2f2f2;
+    border-bottom: 1px solid #f2f2f2
+}
+.preserved{
+    height: 1.2rem;
+    font-size: .48rem;
+    color: #fff;
+    background: #ec1019;
+    text-align: center;
+    line-height: 1.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 10rem
+}
+</style>

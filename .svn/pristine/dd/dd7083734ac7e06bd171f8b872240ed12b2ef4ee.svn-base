@@ -1,0 +1,84 @@
+<template>
+  <div>
+    <div class="riskhead"></div>
+    <mt-popup v-model="popupVisible"  >
+        <div class="model-risk">
+            <h1>重要提示</h1>
+            <h2>请仔细阅读然后填写本报告</h2>
+            <div class="model-risk-content">1.向本行第一次申请任何理财投资产品前， 请填写本评估报告，并于每年进行重新评估。本问卷旨在了解您的财务状况、投资经验及风险承受能力等，借此协助您选择合适的理财产品类别，以达到您的投资目标。<br>
+2.风险提示： 投资需要承担各类风险， 可能遭受资金损失。同时， 投资时还应考虑本金兑付风险、市场风险、流动性风险、汇率风险、信用风险、利率风险、赋税风险、产品复杂度风险等各类风险。<br>
+3.   如有可能影响您自身风险承受能力的情形发生，请您在再次购买我行理财产品时主动要求重新填写风险承受能力评估报告。</div>
+            <div class="model-risk-foot" @click="start()">开始测试</div>
+        </div>
+    </mt-popup>
+  </div>
+</template>
+
+<script>
+import { Popup } from 'mint-ui';
+export default {
+    data(){
+        return{
+            popupVisible:true
+        }
+    },
+    created(){
+
+    },
+    methods:{
+        start(){
+            this.popupVisible = false;
+        }
+    }
+}
+</script>
+
+<style>
+.riskhead{
+    width: 10rem;
+    height: 3.786667rem;
+    background: url('../../assets/home/risk.png') no-repeat;
+    background-size: 100% 100%;
+}
+.model-risk{
+    width: 7.733333rem;
+    height: 10.933333rem;
+    background: #fff;
+     border-radius: .266667rem;
+}
+.mint-popup{
+    border-radius: .266667rem;
+}
+.model-risk h1,.model-risk h2{
+    text-align: center;
+}
+.model-risk h1{
+    line-height: .666667rem;
+    font-size: .533333rem;
+    margin-top: .4rem;
+    color: #000;
+}
+.model-risk h2{
+    line-height: .666667rem;
+    font-size: .32rem;
+    color: #171717;
+}
+.model-risk-content{
+    box-sizing: border-box;
+    padding: 0 .666667rem;
+    line-height: .533333rem;
+    color: #979797;
+}
+.model-risk-foot{
+    margin:0 auto;
+    width: 4.6rem;
+    height: .933333rem;
+    background: #ff6969;
+    border-radius:.666667rem;
+    font-size: .48rem;
+    color: #fff;
+    line-height: .933333rem;
+    text-align: center;
+    margin-top: .533333rem;
+}
+</style>

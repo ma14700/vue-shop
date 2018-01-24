@@ -1,0 +1,268 @@
+<template>
+  <div class="three-max">
+    <div id="tmbox">
+    </div>
+    <progress-bar v-if="showProgress" class="progress" type="circle" color="#007AFF" ref="progress" :options="pgOptions"></progress-bar>
+  </div>
+</template>
+<script>
+import * as THREE  from 'three'
+import DDSLoader from './threejs/loaders/DDSLoader'
+import OBJLoader from './threejs/loaders/OBJLoader'
+import MTLLoader from './threejs/loaders/MTLLoader'
+import OrbitControls from './threejs/controls/OrbitControls'
+
+
+export default {
+  data () {
+    return {
+      scene : 0,
+      camera : 0,
+      renderer : 0,
+      controls : 0,
+      objGroup : 0,
+      state : 0,
+      renderCount : 0,
+      _w:414,
+      _h:325,
+      senceBg :require("../../assets/3dmax/3d-max-bg.png"),
+      showProgress:false,
+      pgOptions: {
+        color: '#00744c',
+        strokeWidth: 4,
+        trailWidth: 1,
+        from: { color: '#aaa', width: 1 },
+        to: { color: '#333', width: 4 },
+        fill: 'rgba(255, 255, 255, 0.5)',
+      }
+    }
+  },
+  props:{
+    objUrl:null,
+    mtlUrl:null
+  },
+  created(){
+  },
+  mounted(){
+    var tmbox = document.getElementById("tmbox");
+    this._w = tmbox.clientWidth;
+    this._h = tmbox.clientHeight;
+    this.initScene();
+    this.render();
+    this.animate();
+    this.showProgress = true;
+  },
+  methods: {
+    initScene : function() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.TextureLoader().load(this.senceBg);
+        this.scene.add(new THREE.AmbientLight(0xffffff)); /*添加环境光*/
+
+
+        var directionalLight1 = new THREE.DirectionalLight(0xffffff,0.5); /*定向光源*/
+        directionalLight1.position.set(0, 10,20).normalize(); /*光源位置*/
+        this.scene.add(directionalLight1); /*添加光源到场景*/
+
+        var directionalLight2 = new THREE.DirectionalLight(0xffffff,0.5); /*定向光源*/
+        directionalLight2.position.set(0, 10,-20).normalize(); /*光源位置*/
+        this.scene.add(directionalLight2); /*添加光源到场景*/
+
+        var light = new THREE.AmbientLight( 0x404040 ); // soft white light
+        this.scene.add( light );
+
+        var light = new THREE.PointLight( 0xff0000, 1, 100 );
+        light.position.set( 50, 50, 50 );
+        this.scene.add( light );
+
+
+
+        // this.stat = new Stats(); //实例化stat
+        // this.stat.domElement.style.position = 'absolute';
+        // this.stat.domElement.style.right = '0px';
+        // this.stat.domElement.style.top = '0px';
+        // document.body.appendChild(stat.domElement);
+
+        this.initCamera();
+        this.initObject();
+        this.initRenderer();
+        this.initControl();
+    },
+    initCamera : function() {
+        this.camera = new THREE.PerspectiveCamera(50.00, this._w / this._h, 0.1, 1000); /*镜头*/
+        this.camera.position.set(0, 2.4, 10);
+        this.camera.rotation.x = 0;
+        this.camera.rotation.y = 0;
+        this.camera.rotation.z = 0;
+        this.camera.castShadow = true;
+        this.camera.lookAt(this.scene.position);
+        this.scene.add(this.camera);
+    },
+    initRenderer : function() {
+        this.renderer = new THREE.WebGLRenderer(); /*渲染器*/
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(this._w, this._h);
+        var container = document.getElementById('tmbox');
+        /*加载渲染*/
+        container.appendChild(this.renderer.domElement);
+    },
+    initObject : function() {
+      var _this = this;
+        /*加载进度回调*/
+        var _loader = {
+            onProgress: function(xhr) {
+                if (xhr.lengthComputable) {
+                    var percentComplete = xhr.loaded / xhr.total * 100;
+                    var percent = Math.round(percentComplete, 2);
+                      if(_this.$refs.progress)
+                      {
+                        _this.$refs.progress.setText(percent + "%");_this.$refs.progress.set(percent/100);
+                      }
+                    if (percent >= 100) {
+                        _this.showProgress = false;
+                    }
+                }
+            },
+            onError: function(xhr) {
+                console.log('加载出现异常，请刷新重试');
+            }
+        }
+
+        THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
+        var mtlLoader = new THREE.MTLLoader(); /*初始化3dmax导出文件mtl加载器*/
+        //mtlLoader.setBaseUrl('http://img.noblemetal.com/uploadfiles/3dmax/20171111/images/');
+        //mtlLoader.setPath(_this.mtlUrl); /*设置文件路径*/
+        mtlLoader.load(_this.mtlUrl + '?v=' + new Date()*1,function(materials) { /*加载材质文件*/
+            materials.preload(); /*材质预加载*/
+            var objLoader = new THREE.OBJLoader(); /*初始化obj文件加载器*/
+
+            objLoader.setMaterials(materials); /*设置模型材质*/
+            //objLoader.setPath('3dmax/mx5/'); /*设置文件路径*/
+            objLoader.load(_this.objUrl + '?v=' + new Date()*1, function(object) { /*加载模型文件*/
+                object.position.y = 0; /*设置模型初始化位置*/
+                object.position.z = 0; /*设置模型初始化位置*/
+                object.position.x = 0; /*设置模型初始化位置*/
+                object.scale.x = 1;
+                object.scale.y = 1;
+                object.scale.z = 1;
+                object.rotation.x = 0;
+                object.rotation.y = 0;
+                object.rotation.z = 0;
+
+                _this.objGroup = new THREE.Object3D();
+                _this.objGroup.position.set(3.86, -12, 0);
+                _this.objGroup.add(object);
+
+                var rope = object.children.filter(s => {
+                    return s.name == 'Ysk_1 pCylinder1'
+                })[0];
+                if (rope) {
+                    var mloader = new THREE.TextureLoader();
+                    mloader.load('http://img.henandingdang.com/uploadfiles/3dmax/20171111/images/KR-01.jpg',
+                      // 资源加载完成后的回调函数
+                      function (texture) {
+                        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                        texture.repeat.set(1, 1);
+                        var material = new THREE.MeshBasicMaterial( {
+                          map: texture
+                        });
+                        material.needsUpdate = true;
+                        rope.material = material;
+                        _this.render();
+                      },
+                      function ( xhr ) {
+                        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
+                      },
+                      function ( xhr ) {
+                        console.log( 'An error happened' );
+                      }
+                    );
+                }
+                _this.scene.add(_this.objGroup); /*将模型添加入场景*/
+            }, _loader.onProgress, _loader.onError);
+        });
+
+    },
+    initControl : function() {
+        this.controls = new THREE.OrbitControls(this.camera, document.getElementById("tmbox"), {
+            enableRotateY: false,
+            rotateMoveCallback: function(ctl) {
+                ctl.autoRotate = false;
+                clearTimeout(ctl.autoRotateTimer);
+                ctl.autoRotateTimer = setTimeout(function() {
+                    ctl.autoRotate = true;
+                }, 10e3);
+            }
+        });
+        this.controls.autoRotate = true; //设置平面自动旋转
+        this.controls.autoRotateSpeed = 1;
+
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.3;
+
+        this.controls.enablePan = true;
+        this.controls.enableZoom = true;
+
+        this.controls.enableRotate = true;
+        this.controls.rotateSpeed = 0.5;
+
+        this.controls.addEventListener('change', this.render);
+    },
+    render : function() {
+        this.renderer.render(this.scene, this.camera);
+    },
+    animate : function () {
+        if (this.renderCount === 0) {
+            this.render();
+        }
+        requestAnimationFrame(this.animate);
+        this.controls.update();
+    }
+  }
+}
+</script>
+<style>
+.three-max{
+  width:100%;
+  height:100%;
+  position: relative;
+}
+#tmbox{
+  width:100%;
+  height:100%;
+  position: relative;
+}
+
+
+.pgs {
+    width: 100%;
+    height: 5px;
+    float: left;
+    background-color: #ddd;
+}
+
+#pgsline {
+    width: 0;
+    float: left;
+    height: 5px;
+    background-color: #9d2932;
+}
+
+
+</style>
+<style scoped>
+.progress{
+    width: 120px;
+    height: 120px;
+    line-height: 120px;
+    background: none;
+    margin: 0 auto;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    position: absolute!important;
+    z-index: 9999999;
+    left: 50%;
+    margin-left: -60px;
+    top: 50%;
+    margin-top: -60px;
+  }
+</style>

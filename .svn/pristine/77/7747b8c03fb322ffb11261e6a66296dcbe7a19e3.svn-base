@@ -1,0 +1,336 @@
+<template>
+  <div>
+    <div class="riskhead"></div>
+    <mt-popup v-model="popupVisible"  >
+        <div class="model-risk">
+            <h1>重要提示</h1>
+            <h2>请仔细阅读然后填写本报告</h2>
+            <div class="model-risk-content">1.向本行第一次申请任何理财投资产品前， 请填写本评估报告，并于每年进行重新评估。本问卷旨在了解您的财务状况、投资经验及风险承受能力等，借此协助您选择合适的理财产品类别，以达到您的投资目标。<br>2.风险提示： 投资需要承担各类风险， 可能遭受资金损失。同时， 投资时还应考虑本金兑付风险、市场风险、流动性风险、汇率风险、信用风险、利率风险、赋税风险、产品复杂度风险等各类风险。<br>3.   如有可能影响您自身风险承受能力的情形发生，请您在再次购买我行理财产品时主动要求重新填写风险承受能力评估报告。</div>
+            <div class="model-risk-foot" @click="start1()">开始测试</div>
+        </div>
+    </mt-popup>
+    <div class="riskcontent" v-for="(items,indexs) in riskList" v-if="flag==indexs && write == true">
+        <p>{{items.sequence}}</p>
+        <ul>
+            <li class="clearfix" v-for="(item,index) in items.children"><span>{{item}}</span><span @click="contchance(index)"><i class="iconfont " :class="[bodyStatus==index ? 'icon-xuanzhong' : 'icon-quan']"></i></span></li>
+        </ul>
+        <div class="nextrisk" @click="nextquestion()">下一题</div>
+    </div>
+    <div class="riskfoot" v-if="flag == 10">
+        <p>您的总得分是:<span>{{quence}}分</span></p>
+        <p>根据您所填的信息，我们认为您的风险承受力为：</p>
+        <div class="quence-content" v-if="quence <= 20">
+            <p>低风险承受能力（≤20分）</p>
+            <div>您是一个相对保守的投资者，风险承受力较低。我们建议您配置资产时以低风险或无风险的保本型投资产品为主，如定期存款、国债、保本型理财产品、分红险、货币型/保本型基金等。</div>
+        </div>
+       <div class="quence-content" v-else-if="quence>20 && quence<26">
+           <p>中低风险承受能力（21-25分）</p>
+           <div>
+               您是一个比较稳健的投资者，能够承担较低的投资风险和波动，我们建议您可以购买一些风险中低等的投资产品，如财富系列人民币理财产品、万能险、债券型基金等，也可配置一定资金购买低风险投资产品。
+           </div>
+       </div>
+       <div class="quence-content" v-else-if="quence>25 && quence<36">
+           <p>中等风险承受能力（26-35分）</p>
+           <div>
+               您是一个比较稳健的投资者，能够承担一定的投资风险和波动，我们建议您可以购买一些风险中等的投资产品，如天富系列人民币理财产品、混合型/偏股型基金、代理金交所贵金属现货实盘合约，也可配置一定资金购买较高风险的投资产品。但请根据自身情况，合理配置购买金额，避免将生活所需流动性资金投资于期限较长的产品。
+           </div>
+       </div>
+       <div class="quence-content" v-else-if="quence>35 && quence<46">
+           
+           <p>较高风险承受能力（36-45分）</p>
+           <div>您是一个积极的投资者，愿意通过承担较高的风险来换取更高的投资回报。我们建议您可适当购买一些风险较高的投资产品，如创富系列人民币理财产品、投连险、股票型基金、代理金交所贵金属现货延期交收合约等，也可配置一定资金购买中低风险投资产品以分散风险。但请根据自身财务状况合理购买高风险投资产品的金额，避免错过投资其他产品的机会。</div>
+       </div>
+       <div class="quence-content" v-else-if="quence>45">
+           
+           <p>高风险承受能力（≧46分）</p>
+           <div>您是一个激进的投资者，愿意通过承担高风险、高投资波动性来换取高投资回报。我们建议您可根据自身财务状况适当购买一些高风险投资产品。</div>
+       </div>
+       <div class="riskfoot-content">
+                <p>评估提示：</p>
+                <div>以上测评仅供参考，并未完全包括所有影响风险承受力的因素；</div>
+                <div>评估结果不应视为具体的投资品种推荐，也不应作为您投资决策的最终依据;</div>
+                <div>购买投资产品需要您自己判断、做出决策，并承担投资风险，投资有风险，请谨慎购买；</div>
+                <div>您可根据需要，随时申请对风险承受能力做重新评估;</div>
+                <div>在购买基金、本外币理财产品或者保险产品时请核对您的风险承受能力，并审慎选择相匹配的产品。</div>
+        </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { Popup } from 'mint-ui';
+import { Toast } from 'mint-ui';
+import { mapState, mapMutations } from 'vuex'
+import { setStore, getStore, removeStore } from '../../config/mUtils'
+export default {
+    data(){
+        return{
+            popupVisible:false,
+            bodyStatus:-1,
+            roll:1,
+            quence:0,
+            flag:0,
+            riskList:[{
+                sequence:'1、请选择您的年龄：',
+                children:['A、大于65岁','B、56-65岁 ', 'C、40-55岁' , ' D、30-39岁','  E、18-29岁']
+            },{
+                sequence:'2. 以下符合您目前的家庭年可支配收入（家庭年收入总和–家庭年日常开支）的是：：',
+                children:['A、< ￥36,000元 ','B、￥36,001—￥60,000元','C、￥60,001—￥120,000元','D、￥120,000—￥200,000元','E、>￥200,000元']
+            },{
+                sequence:'3、下列哪项最能说明您的投资经验：',
+                children:['A、无：我缺乏投资经验，只有银行存款','B、有限：我有一定的投资知识，但还没有尝试过真实投资','C、一般：我有一定的投资经验，但希望得到专业人士的进一步帮助','D、丰富：我是一位有经验的投资者，并倾向于自己做出投资决策']
+            },{
+                sequence:'4、您曾经做过的投资产品有：',
+                children:['A、较低风险类产品，如货币型基金，分红险，债券型理财产品等','B、适度风险类产品，如债券型基金，万能险，天富系列理财产品等','C、较高风险类产品，如偏股型、股票型基金、投连险、创富理财产品等','D、高风险类产品，如股票、衍生产品等']
+            },{
+                sequence:'5. 您认为以下是最适合您的投资态度？',
+                children:['A、厌恶风险，不希望本金损失，希望获得稳定收益','B、保守投资，不希望本金损失，愿意承担一定程度的风险，收益略高于定期存款','C、稳健投资，愿意承担有限的本金损失，寻求资金长期的较高收益和成长性','D、偏好风险，希望赚取高额收益，能够接受较长期间的负面波动，包括本金损失']
+            },{
+                sequence:'6、您打算购买投资产品的资产占您目前家庭总资产的比例为：',
+                children:['A、75%以上','B、75%—51%','C、50-26% ','D、25%以下']
+            },{
+                sequence:'7、您的一次性投入型投资计划预计投资多长时间',
+                children:['A、1年以内，可能会随时动用投资资金， 对其流动性要求比较高','B、1-3年，为获得满意的收益，短期内不会动用投资资金','C、3-5年，在相对较长的一段时间内进行投资， 对流动性要求较低','D、5年以上，为达理财目标， 持续进行投资']
+            },{
+                sequence:'8、未来5年，您预计自己每月可用于投资理财的资金变化如何',
+                children:['A、预计未来每月可投资金额会减少（如退休）','B、预计未来每月可投资金额跟现在大致相同','C、预计未来每月可投资金额平稳增长','D、预计未来每月可投资金额会大幅增加']
+            },{
+                sequence:'9、您的投资目的与期望值是？',
+                children:['A、资产保值，与银行同期存款利率大体相同','B、资产稳健增长，略高于银行定期存款利率','C、资产迅速增长，远超银行定期存款利率']
+            },{
+                sequence:'10、当您短期内面临投资亏损风险时，最多可承受的价值波动幅度为',
+                children:['A、不能承受任何本金损失','B、能够承受本金10%以内的亏损','C、能够承受本金11-30%的亏损','D、能够承受本金31%-50%的亏损 ','E、能够承受本金50%以上的亏损']
+            }],
+            endQuence:[],
+            write:true
+        }
+    },
+    created(){
+        this.start();
+    },
+    watch:{
+       
+    },
+    methods:{
+        start1(){
+            this.popupVisible = false;
+        },
+        start(){
+            this.$http.get('/api/risk/check').then(res=>{
+                console.log(res.data.data);
+                if(res.data.data == true){
+                    this.startQuence();
+                    this.write = false;
+                    this.flag = 10;
+                    this.popupVisible = false;
+                }else{
+                    this.popupVisible = true;
+                }   
+            })
+        },
+        startQuence(){
+            this.$http.get('/api/risk/last').then(res=>{
+                console.log(res.data.data);
+                this.quence = res.data.data.appraisalScore;
+            })
+        },
+        endRoll(){
+            console.log("'"+this.endQuence+"'",this.quence)
+            this.$http.post('/api/risk/record',{
+                AppraisalItems:"["+this.endQuence.join(',')+"]",
+                AppraisalScore:this.quence,
+                AppraisalResult:'D'
+            }).then(res=>{
+                console.log(res)
+            })
+        },
+        contchance(index){
+            this.bodyStatus = index;
+            if(index == 0){
+                this.roll  = 1
+            }else if(index == 1){
+                this.roll  = 2
+            }else if(index == 2){
+                this.roll  = 3
+            }else if(index == 3){
+                this.roll  = 4
+            }else if(index == 4){
+                this.roll  = 5
+            }
+            console.log(this.roll,1)
+        },
+        nextquestion(){
+            if(this.bodyStatus <0 || this.bodyStatus >4){
+                alert('请选择')
+            }else{
+                this.endQuence.push(this.roll)
+                this.flag ++; 
+                console.log(this.roll,this.flag)
+                if(this.flag == 10){
+                    console.log(123)
+                        if(this.roll == 1){
+                        this.roll  = 1
+                    }else if(this.roll == 2){
+                        this.roll  = 2
+                    }else if(this.roll == 3){
+                        this.roll  = 4
+                    }else if(this.roll == 4){
+                        this.roll  = 6
+                    }else if(this.roll == 5 ){
+                        this.roll  = 8
+                    }
+                    this.quence = this.roll + this.quence;
+                    this.endQuence = this.endQuence.reverse();
+                    this.endRoll();
+                }else if(this.flag == 3){
+                    if(this.roll == 1 || this.roll ==2){
+                        this.flag  = this.flag +1;
+                        this.endQuence.push(this.roll)
+                        this.quence = this.roll + this.quence;
+                    }
+                }else if(this.flag == 4){
+                    this.quence = this.roll +5;
+                   
+                }else{
+                    this.quence = this.roll + this.quence;
+                  
+                }
+                console.log(this.quence);
+                this.bodyStatus = -1;
+                }
+                console.log(this.endQuence,123);
+        }
+    }
+}
+</script>
+
+<style>
+.riskhead{
+    width: 10rem;
+    height: 3.786667rem;
+    background: url('../../assets/home/risk.png') no-repeat;
+    background-size: 100% 100%;
+}
+.model-risk{
+    width: 7.733333rem;
+    height: 10.933333rem;
+    background: #fff;
+     border-radius: .266667rem;
+}
+.mint-popup{
+    border-radius: .266667rem;
+}
+.model-risk h1,.model-risk h2{
+    text-align: center;
+}
+.model-risk h1{
+    line-height: .666667rem;
+    font-size: .533333rem;
+    margin-top: .4rem;
+    color: #000;
+}
+.model-risk h2{
+    line-height: .666667rem;
+    font-size: .32rem;
+    color: #171717;
+}
+.model-risk-content{
+    box-sizing: border-box;
+    padding: 0 .666667rem;
+    line-height: .533333rem;
+    color: #979797;
+}
+.model-risk-foot{
+    margin:0 auto;
+    width: 4.6rem;
+    height: .933333rem;
+    background: #ff6969;
+    border-radius:.666667rem;
+    font-size: .48rem;
+    color: #fff;
+    line-height: .933333rem;
+    text-align: center;
+    margin-top: .533333rem;
+}
+.riskcontent{
+    box-sizing: border-box;
+    padding: 0 1.293333rem;
+    margin-top: .4rem;
+}
+.riskcontent>p{
+    text-align: center;
+    line-height: .8rem;
+    font-size: .373333rem;
+    color: #000;
+    font-weight: 500;
+}
+.riskcontent li{
+    line-height: .533333rem;
+    font-size: .373333rem;
+    margin-top: .533333rem;
+}
+.riskcontent li>span:last-child{
+    float: right;
+}
+.riskcontent li>span:first-child{
+    width: 80%;
+    float: left;
+}
+.nextrisk{
+    width: 2.4rem;
+    height: .733333rem;
+    line-height: .733333rem;
+    text-align: center;
+    font-size: .346667rem;
+    color: #fff;
+    margin:0 auto;
+    margin-top: .666667rem;
+    border-radius: .266667rem;
+    background: #ff7f7f;
+}
+.riskfoot{
+    box-sizing: border-box;
+    padding: 0 1.293333rem;
+    margin-top: .4rem;
+}
+.riskfoot>p{
+    font-size: .16rem;
+    color: #333;
+}
+.riskfoot>p:first-child{
+    line-height:.666667rem;
+}
+.riskfoot>p>span{
+    padding-left:.266667rem;
+}
+.quence-content>p{
+    margin-top: .533333rem;
+    font-size: .4rem;
+    color: red;
+    font-weight: 500;
+    text-align: center;
+}
+.quence-content>div{
+    line-height: .6rem;
+    font-size: 12px;
+    margin-top: .4rem;
+    text-indent: 2em;
+    color: #666;
+}
+.riskfoot-content>p{
+    font-size: 12px;
+    color: red;
+}
+.riskfoot-content{
+    font-size: 12px;
+    line-height: .4rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+.riskfoot-content>div{
+    text-indent: 2em;
+    font-size: 12px;
+    line-height: 0.5rem;
+    color: #333;
+}
+</style>

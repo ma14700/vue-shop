@@ -1,0 +1,170 @@
+<template>
+  <div class="order">
+        <mt-navbar v-model="selected">
+            <mt-tab-item id="0"><span class="wrp">全部(22)</span> </mt-tab-item>
+            <mt-tab-item id="1"><span class="wrp">待发货(5)</span> </mt-tab-item>
+            <mt-tab-item id="2"><span class="wrp">待收货(15)</span> </mt-tab-item>
+            <mt-tab-item id="3"><span class="wrp">售后(2)</span></mt-tab-item>
+        </mt-navbar>
+    <mt-tab-container v-model="selected">
+            <mt-tab-container-item id="0">
+                <ul class="all-order">
+                    <li>
+                        <h3>周生生<span>待付款</span></h3>
+                        <div class="good-wrp">
+                            <img src="../../assets/home/yanshi.png" alt="">
+                            <p>零兑金-好运常来好运常来<span>¥1080</span></p>
+                            <p>材质：金银<span>×1</span></p>
+                        </div>
+                         <div class="good-wrp">
+                            <img src="../../assets/home/yanshi.png" alt="">
+                            <p>零兑金-好运常来好运常来<span>¥1080</span></p>
+                            <p>材质：金银<span>×1</span></p>
+                        </div>
+                        <p class="total">共计1件商品，合计：<span>¥1080</span></p>
+                        <div class="bottom-tip">
+                            <i class="iconfont icon-quan"></i>剩余5天02小时14分
+                            <span>确认收货</span>
+                            <span>查看物流</span>
+                        </div>
+                    </li>
+                </ul>
+            </mt-tab-container-item>
+            <mt-tab-container-item id="1">
+                <div class="blank-page">
+                    暂无订单
+                </div>
+            </mt-tab-container-item>
+            <mt-tab-container-item id="2">
+            </mt-tab-container-item>
+            <mt-tab-container-item id="3">
+            </mt-tab-container-item>
+    </mt-tab-container>
+  </div>
+</template>
+
+<script>
+import { Navbar, TabItem } from 'mint-ui';
+export default {
+  data() {
+        return {
+            selected:'0'
+        }
+    },
+}
+</script>
+
+<style scoped>
+.order{
+    background: #f7f7f7;
+
+}
+.mint-navbar .mint-tab-item.is-selected {
+    border-bottom: 2px solid #ec1019;
+    color: #ec1019;
+    margin: 0; 
+}
+.mint-navbar .mint-tab-item {
+    box-sizing: border-box;
+    padding: 0;
+    height: 1.17333rem;
+    color: #333;
+    border-bottom: 1px solid #f4f4f4;
+}
+.mint-navbar .mint-tab-item .mint-tab-item-label .wrp {
+    line-height: 1.17333rem ;
+    font-size: .4rem;
+}
+.all-order{
+    padding: .32rem;
+    overflow: hidden;
+
+}
+.all-order>li{
+    box-sizing: border-box;
+    border: 1px solid #f4f4f4;
+    background: #fff;
+   
+    font-size: .4rem;
+    color: #333;
+}
+.all-order>li>h3{
+    height: .946667rem;
+    line-height: .946667rem;
+     padding: 0 .28rem;
+     border-bottom: 1px solid #f4f4f4;
+}
+.all-order>li>h3>span{
+    color: #ec1019;
+    float: right;
+}
+.good-wrp{
+    overflow: hidden;
+    padding:  .28rem;
+    box-sizing: border-box;
+    border-top: 1px solid #f4f4f4;
+}
+.good-wrp:nth-of-type(1){
+    border-top: 0
+}
+.good-wrp>img{
+    width: 1.36rem;
+    height: 1.36rem;
+    float: left;
+    margin-right: .2rem;
+}
+.good-wrp>p>span{
+    float: right;
+}
+.good-wrp>p:nth-of-type(1) >span{
+    color: #ec1019;
+}
+.good-wrp>p:nth-of-type(2){
+    color: #999;
+    margin-top: .56rem
+}
+.total{
+    border-top: 1px solid #f4f4f4;
+    height: .946667rem;
+    line-height: .946667rem;
+    text-align: right;
+    padding: 0 .32rem;
+    font-size: .4rem;
+    color: #333;
+}
+.total>span{
+    color: #ec1019;
+    font-size: .48rem;
+}
+.bottom-tip{
+    border-top: 1px solid #f4f4f4;
+    padding: .2rem .32rem;
+    font-size: .36rem;
+    color: #858585;
+    overflow: hidden;
+}
+.bottom-tip>span{
+    display: block;
+    float: right;
+    border-radius: 3px;
+    margin-left: .2rem;
+    padding:0  .28rem;
+    height: .56rem;
+    line-height: .6rem;
+}
+.bottom-tip>span:nth-of-type(1){
+    background: #ec1019;
+    color: #fff;
+}
+.bottom-tip>span:nth-of-type(2){
+    border: 1px solid #e7e7e7;
+}
+.blank-page{
+    text-align: center;
+    font-size: .48rem;
+    color: #333;
+    min-height: 13.5rem;
+    line-height: 12rem
+}
+
+</style>

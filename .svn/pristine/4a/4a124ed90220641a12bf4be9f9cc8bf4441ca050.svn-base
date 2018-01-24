@@ -1,0 +1,762 @@
+<template>
+    <div class="submitorder">
+        <div class="address">
+            <h2>收货人：{{defaultAddress.receiverName}} <span>{{defaultAddress.mobile}}</span></h2>
+            <span>{{defaultAddress.siteRegion}} &nbsp;&nbsp;&nbsp;{{defaultAddress.address}}</span>
+            <p></p>
+            <i class="iconfont icon-right" @click="moreAddr()"></i>
+        </div>
+        <mt-popup v-model="addrVisible" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+            <div class="address-wraper">
+                <div class="order-address" v-for="(item,index) in addList" :key="index">
+                        <h2>{{item.receiverName}} <span>{{item.mobile}}</span> <i class="iconfont" :class="nowchoose==index?'icon-duigou':'icon-quan'" @click="chooseAddr(item,index)"></i></h2>
+                        <span>{{item.siteRegion}}{{item.address}}</span>
+                </div>
+            </div>
+            <div style="height:1.2rem"></div>
+            <div class="add-new" >
+            <span @click="confirmAddr">确定</span> <span @click="addNew">添加新地址</span>
+            </div>
+        </mt-popup>
+        <div class="order-good" v-for="(group,index) in orderGoodList" :key="index">
+            <h2>
+                <img :src="group.goodSupplierLogo" alt="">
+                {{group.goodSupplierName}}
+            </h2>
+            <ul>
+                <li v-for="(item,index) in group.shopCartItems" :key="index">
+                    <img :src="item.goodFirstPicUrl" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">{{item.goodName | dot}}<span>¥{{item.skuPrice | two}}</span></p>
+                        <p class="order-gdinfo">{{proData(item.skuPropName)}}<span>×{{item.cartNum}}</span></p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <ul class="other-wrp"  v-if="couponPostResult">
+            <li @click="handelClick('coupon')">品牌优惠<i class="iconfont icon-right"></i><i v-text="brandcoupon"></i></li>
+        </ul>
+        <ul class="other-wrp">
+            <li @click="handelClick('invoice')">发票类型<i class="iconfont icon-right"></i><i v-text="invocetype"></i></li>
+            <li v-if="invocetype!='不开具发票'">发票抬头<input type="text"  v-model="InvoiceTitle"></li>
+            <li v-if="invocetype=='企业'" >添加税号<input type="text" placeholder="必填：请填写纳税人识别号" v-model="DutyNumber"></li>
+
+        </ul>
+        <ul class="other-wrp">
+            <li>买家留言<input type="text" placeholder="选填：对本次交易的留言" v-model="BuyerComments"></li>
+        </ul>
+        <ul class="other-wrp">
+            <li>理财经理号<input type="text" placeholder="选填" v-model="BuyManager"></li>
+        </ul>
+        <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+            <div class="coupon-wrp" v-if="model=='coupon'">
+                <h2>品牌优惠</h2>
+                <ul>
+                    <li v-for="(item,index) in couponList" :key="index">{{item}}<i class="iconfont " @click="chooseCoupon(index)" :class="ischoosecoupon==index?'icon-duigou':'icon-quan'"></i></li>
+                </ul>
+                <p @click="confirmO()">确认</p>
+            </div>
+            <div class="invoice-wrp coupon-wrp" v-if="model=='invoice'">
+                <h2>发票类型</h2>
+                <ul>
+                    <li v-for="(i,index) in invoce" :key="index">{{i}}<i class="iconfont " @click="chooseInvoice(index)" :class="ischooseinvoice==index?'icon-duigou':'icon-quan'"></i></li>
+                </ul>
+                <p @click="confirmO()">确认</p>
+            </div>
+        </mt-popup>
+        <mt-popup v-model="popupVisible1" popup-transition="popup-fade"  @touchmove.prevent position="bottom">
+            <div class="riskpop">
+                <h2>个人实物金购买协议</h2>
+                    <h3>投资</h3>
+                    <p>项目投资风险评估报告是分析确定风险的过程，在国际投资领域中，为减少投资人的投资失误和风险，每一次投资活动都必须建立一套科学的，适应自己的投资活动特征的理论和方法。项目投资风险评估报告是利用丰富的资料和数据，定性和定量相结合，对投资项目的风险进行全面的分析评价，采取相应的措施去减少、化解、规避风险的途径。</p>
+                    <p>
+                     项目投资风险评估报告是在全面系统分析目标企业和项目的基础上，按照国际通行的投资风险评估方法，站在第三方角度客观公正地对企业、项目的投资风险进行分析。投资风险评估报告包含了投资决策所关心的全部内容，如企业详细介绍、项目详细介绍、产品和服务模式、市场分析、融资需求、运作计划、竞争分析、财务分析等内容，并在此基础上，以第三方角度，客观公正地对投资风险进行评估。[1]
+                    </p>
+
+                    <h3>任务</h3>
+                    <p>风险评估的主要任务包括：
+                    识别评估对象面临的各种风险
+                    评估风险概率和可能带来的负面影响
+                    确定组织承受风险的能力
+                    确定风险消减和控制的优先等级
+                    推荐风险消减对策
+                    可行途径编辑
+                    </p>
+                    <p>在风险管理的前期准备阶段，组织已经根据安全目标确定了自己的安全战略，其中就包括对风险评估战略的考虑。所谓风险评估战略，其实就是进行风险评估的途径，也就是规定风险评估应该延续的操作过程和方式。</p>
+                    <p>风险评估的操作范围可以是整个组织，也可以是组织中的某一部门，或者独立的信息系统、特定系统组件和服务。影响风险评估进展的某些因素，包括评估时间、力度、展开幅度和深度，都应与组织的环境和安全要求相符合。组织应该针对不同的情况来选择恰当的风险评估途径。实际工作中经常使用的风险评估途径包括基线评估、详细评估和组合评估三种。</p>
+
+                    <h3>基线</h3>
+                    <p>如果组织的商业运作不是很复杂，并且组织对信息处理和网络的依赖程度不是很高，或者组织信息系统多采用普遍且标准化的模式，基线风险评估（Baseline Risk Assessment）就可以直接而简单地实现基本的安全水平，并且满足组织及其商业环境的所有要求。
+
+                    </p>
+                    <p>采用基线风险评估，组织根据自己的实际情况（所在行业、业务环境与性质等），对信息系统进行安全基线检查（拿现有的安全措施与安全基线规定的措施进行比较，找出其中的差距），得出基本的安全需求，通过选择并实施标准的安全措施来消减和控制风险。所谓的安全基线，是在诸多标准规范中规定的一组安全控制措施或者惯例，这些措施和惯例适用于特定环境下的所有系统，可以满足基本的安全需求，能使系统达到一定的安全防护水平。组织可以根据以下资源来选择安全基线：
+                    国际标准和国家标准，例如BS 7799-1、ISO 13335-4；
+                    行业标准或推荐
+                    来自其他有类似商务目标和规模的组织的惯例。
+                    当然，如果环境和商务目标较为典型，组织也可以自行建立基线。</p>
+                    <p>基线评估的优点是需要的资源少，周期短，操作简单，对于环境相似且安全需求相当的诸多组织，基线评估显然是最经济有效的风险评估途径。当然，基线评估也有其难以避免的缺点，比如基线水平的高低难以设定，如果过高，可能导致资源浪费和限制过度，如果过低，可能难以达到充分的安全，此外，在管理安全相关的变化方面，基线评估比较困难。
+                    基线评估的目标是建立一套满足信息安全基本目标的最小的对策集合，它可以在全组织范围内实行，如果有特殊需要，应该在此基础上，对特定系统进行更详细的评估。</p>
+                    <div style="height:2.5rem"></div>
+
+
+            </div>
+            <div class="read" @click="riskBook()">确定</div>
+        </mt-popup>
+        <p class="total">共 &nbsp;{{totalNum}}&nbsp; 件商品&nbsp;&nbsp;&nbsp;&nbsp;合计：<span>¥{{totalPrice}}</span></p>
+
+        <div class="riskbook">
+            <span><i class="iconfont " @click="riskBook()"  :class="riskbook==true?'icon-duigou':'icon-quan'"></i></span>
+            <p>已阅读<span @click="riskPop()">《个人实物金购买协议》</span></p>
+        </div>
+        <div style="height:2.266667rem;"></div>
+        <div class="bot-confirm">
+            <p>总计：<span>¥{{totalPrice}}</span></p>
+            <span @click="payConfirm" :class="riskbook==true?'':'pay-color'" v-if="riskbook==true">确认</span>
+            <span @click="payBook()" class="pay-color" v-else>确认</span>
+        </div>
+        <form id="payForm" method="post" action="http://103.22.255.201:8443/psbcpay/main" @submit.prevent="submitToPay">
+            <input type="hidden" :value="paymentSign.plain" name="Plain">
+            <input type="hidden" :value="paymentSign.signature" name="Signature">
+            <input type="hidden" :value="paymentSign.transName" name="transName">
+        </form>
+    </div>
+</template>
+
+<script>
+import { Popup } from "mint-ui";
+import { mapMutations, mapState } from "vuex";
+import { MessageBox } from "mint-ui";
+import { Toast } from "mint-ui";
+export default {
+  data() {
+    return {
+      plain: "",
+      signature: "",
+      transName: "",
+      BuyManager: "",
+      riskbook: false,
+      model: "",
+      popupVisible: false,
+      popupVisible1: false,
+      addrVisible: false,
+      ischoosecoupon: 0,
+      ischooseinvoice: 0,
+      InvoiceType: 0,
+      invocetype: "不开具发票",
+      brandcoupon: "满100减10，最多减100",
+      invoce: ["不开具发票" ,"个人", "企业"],
+      orderGoodList: [],
+      couponList: ["满100减10，最多减100 ", "不使用优惠"],
+      couponPostResult: "",
+      ShopCartGuidList: [],
+      DutyNumber: "",
+      paymentSign:{
+          plain:'',
+          signature:'',
+          transName:''
+      },
+      BuyerComments: "",
+      addList: [], //地址列表
+      defaultAddress: "", //默认地址
+      nowchoose: 0 //当前选择的地址
+    };
+  },
+  created() {
+      /*如果为空，跳转到订单列表页*/
+    this.GET_PLACE_ORDER();
+    this.orderGoodList = this.placeOrder;
+    var _this = this;
+    this.orderGoodList.map(function(i, s) {
+      if (i == null) {
+        _this.orderGoodList.splice(s, 1);
+      }
+    });
+    if (this.orderGoodList.length == 0) {
+      this.$router.push("/home");
+    }
+    this.orderGoodList.map(function(i, s) {
+      i.shopCartItems.map(function(g) {
+        _this.ShopCartGuidList.push(g.guid);
+      });
+    });
+    this.$http.post("/api/neworder/coupon/check").then(res => {
+      this.couponPostResult = res.data.data;
+    });
+    this.getaddList();
+  },
+  computed: {
+    ...mapState(["placeOrder"]),
+    totalPrice: function() {
+      let totalprice = 0;
+      this.orderGoodList.forEach(function(s) {
+        s.shopCartItems.forEach(g => {
+          totalprice += g.cartNum * g.skuPrice;
+        });
+      });
+      return totalprice.toFixed(2);
+    },
+    totalNum: function() {
+      let totalnum = 0;
+      this.orderGoodList.forEach(function(s) {
+        s.shopCartItems.forEach(g => {
+          totalnum += parseInt(g.cartNum);
+        });
+      });
+      return totalnum;
+    },
+    InvoiceTitle: function() {
+      let name = this.defaultAddress.receiverName;
+      return name;
+    }
+  },
+  beforeRouteEnter (to, from, next) {
+    if(from.path == "/"){
+      location.href="/order";
+      return;
+    }
+    next();
+  },
+  beforeRouteLeave(to, from, next) {
+    this.CLEAR_ORDER();
+    next();
+  },
+  methods: {
+    ...mapMutations(["GET_PLACE_ORDER", "CLEAR_ORDER"]),
+
+    submitToPay() {
+      document.getElementById("payForm").submit();
+      // MessageBox({
+      //   title: "支付提示",
+      //   message: "支付完成前，请不要关闭此支付验证窗口<br /><strong>请在2小时内支付，超时将关闭订单；</strong>",
+      //   showCancelButton: true,
+      //   confirmButtonText: "支付完成",
+      //   cancelButtonText:"支付遇到问题",
+      //   closeOnClickModal: false
+      // }).then(action => {
+      //   if (action != "confirm") {
+
+      //   }
+      //   else{
+
+      //   }
+      // });
+    },
+    riskPop() {
+      this.popupVisible1 = true;
+    },
+    payBook() {
+      Toast({
+        message: "请先阅读《个人实物金购买协议》",
+        position: "bottom",
+        duration: 1.5e3
+      });
+    },
+    riskBook() {
+      this.riskbook = !this.riskbook;
+      this.popupVisible1 = false;
+    },
+    chooseAddr(item, i) {
+      this.nowchoose = i;
+      this.defaultAddress = item;
+    },
+    getaddList() {
+      this.$http.get("/api/revieve/address/list").then(res => {
+        this.addList = res.data.data;
+        var _this = this;
+        this.addList.map(function(i) {
+          if (i.isDefault) {
+            _this.defaultAddress = i;
+          }
+        });
+      });
+    },
+    moreAddr() {
+      this.addrVisible = true;
+    },
+    confirmAddr() {
+      this.addrVisible = false;
+    },
+    payConfirm() {
+      var _this = this;
+      this.$http
+        .post("/api/neworder/create", {
+          UseDefaultCoupon: this.couponPostResult,
+          ShopCartGuidList: this.ShopCartGuidList,
+          ReceiveAddressId: this.defaultAddress.id,
+          InvoiceType: this.InvoiceType,
+          InvoiceTitle: this.InvoiceTitle,
+          DutyNumber: this.DutyNumber,
+          BuyerComments: this.BuyerComments,
+          FinancialManagerNo: this.BuyManager
+        })
+        .then(res => {
+          if (res.data.success) {
+            this.paymentSign = res.data.data;
+            MessageBox({
+              title: "确认支付",
+              message: "确认支付 "+ _this.totalPrice,
+              showCancelButton: true,
+              confirmButtonText: "确定",
+              closeOnClickModal: false
+            }).then(action => {
+              if (action != "confirm") {
+                _this.CLEAR_ORDER();
+                _this.$router.push("order?selected=1");
+                return;
+              }
+              _this.submitToPay();
+            });
+          } else {
+              /*清除placeOrder*/
+            _this.CLEAR_ORDER();
+            MessageBox({
+              title: "结算异常",
+              message: res.data.message,
+              showCancelButton: true,
+              confirmButtonText: "确定",
+              closeOnClickModal: false
+            }).then(action => {
+              //window.location.reload();
+              //_this.$router.push('/risk');
+            });
+          }
+        });
+    },
+    handelClick(p) {
+      this.model = p;
+      this.popupVisible = true;
+      if (p == "invoice") {
+        this.invocetype = this.invoce[this.ischooseinvoice || 0];
+      } else {
+        this.brandcoupon = this.couponList[0];
+      }
+    },
+    chooseCoupon(i) {
+      this.ischoosecoupon = i;
+      this.brandcoupon = this.couponList[i];
+      if (i == 1) {
+        this.couponPostResult = false;
+      }
+    },
+    chooseInvoice(i) {
+      this.ischooseinvoice = i;
+      if (i == 0) {
+        this.InvoiceType = 0;
+      } else if (i == 1) {
+        this.InvoiceType = 1;
+      }
+      else if (i == 2) {
+        this.InvoiceType = 2;
+      }
+      this.invocetype = this.invoce[i];
+    },
+    confirmO() {
+      this.popupVisible = false;
+    },
+    addNew() {
+      this.$router.push("/editaddress");
+    },
+    proData(pro) {
+      pro = pro.split(";");
+      let data = [];
+      for (let i = 0; i < pro.length; i++) {
+        data.push(pro[i].split(":")[1]);
+      }
+      return data.join(";");
+    }
+  },
+  filters: {
+    dot: function(value) {
+      if (!value) {
+        return value;
+      } else {
+        if (value.length > 15) {
+          return value.slice(0, 15) + "...";
+        } else {
+          return value;
+        }
+      }
+    },
+    two: function(value) {
+      if (!value) {
+        return "";
+      }
+      return value.toFixed(2);
+    }
+  }
+};
+</script>
+<style>
+.mint-toast-text {
+  width: 7rem;
+}
+/* messagebox */
+.mint-msgbox-confirm{
+    color: #ec1019;
+    font-size: .4rem;
+}
+.mint-msgbox-cancel{
+    font-size: .4rem;
+}
+</style>
+
+
+<style scoped>
+.riskpop {
+  width: 10rem;
+  max-height: 12rem;
+  box-sizing: border-box;
+  padding:0 0.32rem 0.32rem;
+  line-height: 0.54rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.riskpop h2 {
+  text-align: center;
+  font-size: 0.4rem;
+  margin-bottom: 0.32rem;
+  color: #ec1019;
+}
+.riskpop h3 {
+  color: #ec1019;
+  font-size: 0.36rem;
+}
+.riskpop p {
+  color: #999;
+  text-indent: 2em;
+  font-size: 0.36rem;
+}
+.read {
+  /* margin-top:.2rem; */
+  position: fixed;
+  bottom: 0;
+  background: #ec1019;
+  width: 100%;
+  height: 1.28rem;
+  line-height: 1.28rem;
+  color: #fff;
+  font-size: 0.4rem;
+  text-align: center;
+}
+.pay-color {
+  background: #999 !important;
+  color: #fff;
+}
+.riskbook {
+  width: 10rem;
+  position: fixed;
+  bottom: 1.2rem;
+  height: 1.066667rem;
+  line-height: 1.066667rem;
+  color: #666;
+  text-align: left;
+  text-indent: 01em;
+  background: #fff;
+}
+.riskbook > p {
+  display: inline;
+  margin-left: 0.3rem;
+}
+.riskbook > p > span {
+  color: #ec1019;
+  text-decoration: underline;
+}
+.riskbook p:hover {
+  color: #4ea5ad;
+}
+.riskbook > span > i.icon-duigou {
+  color: #ec1019;
+}
+.coupon-wrp {
+  padding-top: 0.48rem;
+  color: #333;
+  min-height: 8.4rem;
+  position: relative;
+  width: 10rem;
+}
+.coupon-wrp > h2 {
+  font-size: 0.44rem;
+  text-align: center;
+}
+.coupon-wrp > ul {
+  max-height: 5.8rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.coupon-wrp > ul > li:first-child {
+  border-top: 0;
+}
+.coupon-wrp > ul > li {
+  padding: 0 0.48rem;
+  font-size: 0.36rem;
+  box-sizing: border-box;
+  border-top: 1px solid #eee;
+  line-height: 1rem;
+  height: 1rem;
+}
+.coupon-wrp > ul > li > i {
+  float: right;
+}
+.coupon-wrp > ul > li > i.icon-duigou {
+  color: #ec1019;
+}
+.coupon-wrp > p {
+  height: 1.12rem;
+  background: #ec1019;
+  text-align: center;
+  color: #fff;
+  font-size: 0.44rem;
+  line-height: 1.12rem;
+  position: absolute;
+  bottom: 0;
+  width: 10rem;
+}
+.submitorder {
+  background: #f7f7f7;
+}
+.address {
+  background: #fff;
+  margin-bottom: 0.2rem;
+  overflow: hidden;
+  padding-top: 0.32rem;
+  position: relative;
+}
+.address > h2 {
+  font-size: 0.4rem;
+  padding: 0 0.32rem;
+  height: 0.6rem;
+  line-height: 0.6rem;
+}
+.address > h2 > span {
+  margin-left: 0.72rem;
+}
+.address > span {
+  color: #999;
+  font-size: 0.36rem;
+  padding: 0 0.32rem;
+  line-height: 0.8rem;
+}
+.address > p {
+  background: url(../../assets/home/caixian.png);
+  background-size: 100% 100%;
+  width: 100%;
+  height: 10px;
+}
+.address > i {
+  position: absolute;
+  right: 0.32rem;
+  top: 0.54rem;
+  font-weight: bold;
+  color: #999;
+}
+.order-good {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  background: #fff;
+  margin-bottom: 0.2rem;
+}
+.order-good > h2 {
+  font-size: 0.4rem;
+  padding: 0.24rem 0;
+  line-height: 0.68rem;
+  height: 0.68rem;
+}
+.order-good > h2 > img {
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #dedede;
+  float: left;
+  margin-right: 0.32rem;
+}
+
+.order-good > ul > li {
+  border-top: 1px solid #dedede;
+  padding: 0.24rem 0;
+  overflow: hidden;
+}
+.order-good > ul > li > img {
+  width: 1.44rem;
+  height: 1.44rem;
+  float: left;
+}
+.order-good > ul > li .gd-wrp {
+  float: left;
+  font-size: 0.36rem;
+  width: 7.7rem;
+  margin-left: 0.2rem;
+  height: 1.44rem;
+  line-height: 0.8rem;
+}
+.gd-wrp .order-gdname {
+  color: #333;
+}
+.gd-wrp .order-gdname > span {
+  float: right;
+  color: #ec1019;
+}
+.gd-wrp .order-gdinfo {
+  color: #999;
+  line-height: 0.6rem;
+}
+.gd-wrp .order-gdinfo > span {
+  float: right;
+  color: #333;
+}
+.order-good > ul > p {
+  font-size: 0.4rem;
+  text-align: right;
+  height: 0.946667rem;
+  line-height: 0.946667rem;
+}
+.order-good > ul > p > span {
+  color: #ec1019;
+}
+.bot-confirm {
+  height: 1.2rem;
+  background: #fff;
+  position: fixed;
+  bottom: 0;
+  width: 10rem;
+  z-index: 100;
+  left: 0;
+  box-sizing: border-box;
+  box-shadow: 0 0 1px #dedede;
+}
+.bot-confirm > span {
+  width: 2.52rem;
+  height: 1.2rem;
+  color: #fff;
+  background: #ec1019;
+  font-size: 0.48rem;
+  display: block;
+  float: right;
+  text-align: center;
+  line-height: 1.2rem;
+}
+.bot-confirm > p {
+  color: #ec1019;
+  font-size: 0.4rem;
+  display: inline;
+  line-height: 1.2rem;
+  padding-left: 0.32rem;
+}
+.bot-confirm > p > span {
+  font-size: 0.48rem;
+}
+.other-wrp {
+  overflow: hidden;
+  width: 10rem;
+  margin-bottom: 0.2rem;
+  background: #fff;
+  padding: 0 0.32rem;
+  box-sizing: border-box;
+}
+.other-wrp > li {
+  overflow: hidden;
+  line-height: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.36rem;
+  border-top: 1px solid #eee;
+}
+.other-wrp > li:first-child {
+  border-top: 0;
+}
+.other-wrp > li > i {
+  float: right;
+}
+.other-wrp > li > span {
+  margin-left: 0.44rem;
+}
+.other-wrp > li > input {
+  margin-left: 0.44rem;
+  font-size: 0.36rem;
+  color: #333;
+  height: 100%;
+  border: none;
+  width: 7rem;
+}
+.total {
+  height: 1.2rem;
+  line-height: 1.2rem;
+  background: #fff;
+  padding: 0 0.32rem;
+  text-align: right;
+  font-size: 0.36rem;
+    margin-bottom: 0.2rem;
+}
+.total > span {
+  font-size: 0.4rem;
+  color: #ec1019;
+}
+.mint-popup {
+  padding-top:.32rem;
+}
+/* 地址样式 */
+.address-wraper {
+  max-height: 10rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  width: 10rem;
+}
+.order-address {
+  background: #fff;
+  margin-bottom: 0.2rem;
+  overflow: hidden;
+  padding-top: 0.32rem;
+  position: relative;
+  border-top: 1px solid #eeeeee;
+  border-bottom: 1px solid #eeeeee;
+}
+.order-address > h2 {
+  font-size: 0.4rem;
+  padding: 0 0.32rem;
+  height: 0.6rem;
+  line-height: 0.6rem;
+}
+.order-address > h2 > span {
+  margin-left: 0.72rem;
+}
+.order-address > h2 > i {
+  float: right;
+}
+.order-address > h2 > i.icon-duigou {
+  color: #ec1019;
+}
+.order-address > span {
+  color: #999;
+  font-size: 0.36rem;
+  padding: 0 0.32rem;
+  line-height: 0.54rem;
+}
+.order-address .bot {
+  background: url(../../assets/home/caixian.png);
+  background-size: 100% 100%;
+  width: 100%;
+  height: 10px;
+}
+.add-new {
+  height: 1.2rem;
+  font-size: 0.48rem;
+  color: #fff;
+  background: #ec1019;
+  text-align: center;
+  line-height: 1.2rem;
+  position: fixed;
+  bottom: 0;
+  width: 10rem;
+}
+.add-new > span:nth-of-type(1) {
+  background: #ec1019;
+}
+.add-new > span:nth-of-type(2) {
+  background: #ec1000;
+}
+.add-new > span {
+  display: block;
+  float: left;
+  box-sizing: border-box;
+  width: 50%;
+}
+</style>

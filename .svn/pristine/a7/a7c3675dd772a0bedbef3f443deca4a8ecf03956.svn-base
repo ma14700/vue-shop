@@ -1,0 +1,135 @@
+<template>
+    <div class="goodsdetail">
+        <div class="banner"></div>
+        <p class="goods-name">商品名字商品名字商品名字商品名字商品名字品名字商品名字品名字商品名字品名字商品名字品名字商品名字</p>
+        <p class="goods-price">¥1080</p>
+        <p class="goods-info">重量：100g <span>满188包邮（5kg以内）</span></p>
+        <div class="goods-img">
+            商品详情
+        </div>
+        <div class="btm-info">
+            <ul>
+                <li><i class="iconfont icon-xiaoxi"></i>理财经理</li>
+                <li><i class="iconfont icon-fenxiang"></i>分享</li>
+                <li><i class="iconfont icon-shoucang"></i>收藏</li>
+            </ul>
+            <div class="two-btn">
+                <span>加入购物车</span>
+                <span>立即购买</span>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+// import footGuide from '../../components/footer/footGuide'
+export default {
+    data() {
+        return {
+            goodsDetail:'',
+        }
+    },
+    created(){
+         this.$http.get('/api/good/goodinfo?Id=' + this.$route.query.id).then(res => {
+             console.log(res)
+             this.goodsDetail = res.data.data;
+         })
+    },
+    methods:{
+
+    },
+
+
+   
+}
+</script>
+
+
+<style scoped>
+.goodsdetail{
+    background: #f7f7f7;
+}
+    .banner{
+        background: #ec1019;
+        height:  8.333334rem;
+        width: 100%;
+    }
+.goodsdetail>p{
+    background: #fff;
+    padding:.32rem  .32rem  0 .32rem;
+}
+.goods-name{
+    font-size: .4rem;
+    color: #333333;
+    line-height: .54rem;
+}
+.goods-price{
+    color: #ec1019;
+    font-size: .48rem;
+}
+p.goods-info{
+    color: #707070;
+    margin-bottom: .24rem;
+    font-size: .32rem;
+    padding-bottom: .32rem;
+}
+.goods-info>span{
+    float: right;
+}
+.goods-img{
+    background: #fff;
+}
+.btm-info{
+    width: 100%;
+    height: 1.2rem;
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    box-sizing: border-box;
+    border-top: 1px solid #ededed;
+    padding: .24rem 0;
+}
+.btm-info>ul{
+    float: left;
+}
+.btm-info>ul>li{
+    float: left;
+    text-align: center;
+    box-sizing: border-box;
+    width: 1.4rem;
+    border-left: 1px solid #f2f2f2;
+    font-size: .32rem;
+    color: #666666;
+}
+.btm-info>ul>li:first-child{
+    width: 1.5rem;
+    border: 0
+}
+.btm-info>ul>li>i{
+    display: block;
+    font-size: .4rem;
+}
+.two-btn{
+    float: right;
+    height: .72rem;
+}
+.two-btn>span{
+    display: block;
+    float: left;
+    margin-right: .32rem;
+    width: 2.52rem;
+    text-align: center;
+    box-sizing: border-box;
+    height: .72rem;
+    border: 1px solid #ec1019;
+    line-height: .72rem;
+    font-size: .4rem;
+    border-radius: 3px;
+    background: #ec1019;
+    color: #fff;
+}
+.two-btn>span:first-child{
+    color: #ec1019;
+    background: #fff;
+}
+</style>

@@ -1,0 +1,348 @@
+<template>
+  <div class="order">
+        <mt-navbar v-model="selected">
+            <mt-tab-item :class="selected<=0?'is-selected':''" id="0" ><span class="wrp">全部</span> </mt-tab-item>
+            <mt-tab-item id="1"><span class="wrp">待付款</span> </mt-tab-item>
+            <mt-tab-item id="2"><span class="wrp">待发货</span> </mt-tab-item>
+            <mt-tab-item id="3"><span class="wrp">待收货</span> </mt-tab-item>
+            <mt-tab-item id="4"><span class="wrp">售后</span></mt-tab-item>
+        </mt-navbar>
+    <mt-tab-container v-model="selected">
+
+
+    <mt-tab-container-item id="n" v-if="orderList.length>0" v-for="n in [0,1,2,3,4]" :key="n"  v-show="selected == n">
+        <ul class="all-order">
+          <li v-for="(item,index) in orderList[selected]" :key="index" >
+                <div v-if="!!orderList[selected] && orderList[selected].length>0">
+                  <h3>{{item.supplierName}}<span>{{item.orderStatusRemark}}</span></h3>
+                  <div v-for="g in item.orderItem"  class="good-wrp" @click="goDetail(item)" :key="g.id">
+                      <img :src="g.itemPicUrl" :alt="g.itemName">
+                      <p><em>{{g.itemName}}</em><span>¥{{g.itemUnitPrice  | two}}</span></p>
+                      <p><em>{{proData(g.itemSku)}}</em><span>×{{g.itemCount}}</span></p>
+                  </div>
+
+                  <p class="total">共计{{item.goodNum}}件商品，合计：<span>¥{{item.orderTotalAmount | two}}</span></p>
+
+                  <div class="bottom-tip" v-if="item.orderStatus==1">
+                      <em  style="line-height: .56rem;">{{item.createTime | payTimeout}}</em>
+                      <span @click="payOrder(item.orderNo)">立即支付</span>
+                      <span @click="cancleOrder(item.id)">取消订单</span>
+
+                  </div>
+                  <div class="bottom-tip" v-else-if="item.orderStatus == -1 || item.orderStatus == 101 || item.orderStatus == -2" >
+                      <span @click="goDetail(item)">查看详情</span>
+                      <span v-if="item.orderStatus == -1">订单已取消</span>
+                      <span v-if="item.orderStatus == 101">已申请退款</span>
+                  </div>
+                  <div class="bottom-tip" v-else-if="item.orderStatus == 2 || item.orderStatus == 3">
+                      <span @click="goDetail(item)">查看详情</span>
+                      <span @click="confirmReceipt(item.id)" v-if="item.orderStatus == 3">确认收货</span>
+                      <span @click="watchtrans(item.id)" v-if="item.orderStatus == 3">查看物流</span>
+                  </div>
+                </div>
+
+          </li>
+             <div v-if="!!orderList[selected] && orderList[selected].length==0" class="blank-page" >
+                暂无订单
+            </div>
+        </ul>
+
+    </mt-tab-container-item>
+    </mt-tab-container>
+
+  </div>
+</template>
+
+<script>
+import { Navbar, TabItem } from 'mint-ui';
+import { Toast } from 'mint-ui';
+import { MessageBox } from "mint-ui";
+import { setStore, getStore, removeStore } from "../../config/mUtils";
+export default {
+    data() {
+        return {
+            selected:-1,
+            orderStatus:['all','unpay','undeliver','unrecip','aftersales'],
+            orderList:new Array(5),
+            countDown:''
+        }
+    },
+    beforeRouteLeave (to, from, next) {
+      next(vm=>{
+        if(from.path == "/submitorder"){
+          vm.$router.go({
+            path: '/center',
+            replace: true
+          });
+        }
+      });
+    },
+    watch:{
+        selected() {
+            this.ordergetList();
+            setStore("selectOrderType",this.selected);
+        },
+    },
+    created(){
+      this.selected = this.$route.query.selected || 0;
+      removeStore("selectOrderType");
+      //this.ordergetList();
+    },
+    methods:{
+        confirmReceipt(id){
+            MessageBox.confirm('确认收货?', '').then(action => {
+                this.$http.post('/api/neworder/confirmReceipt/' + id).then(res=>{
+                    if(res.data.success){
+                        Toast({
+                            message: '已确认收货',
+                            position: 'bottom',
+                            duration: 1.5e3
+                        });
+                        window.location.reload();
+                    }
+                })
+            });
+        },
+        watchtrans(id){
+            setStore('selected',this.selected);
+            this.$router.push({path:'/tranparcel',query:{id}})
+        },
+        ordergetList(){
+            // this.$router.push({path:'/order',query:{selected:this.selected}})
+            var _this = this;
+            let status = this.orderStatus[this.selected] || "all";
+            (function(temp){
+              if(!!_this.orderList[temp] ) return;
+              _this.$http.post('/api/neworder/list/'+status).then(res=>{
+                _this.orderList.splice(temp, 1, res.data.data);
+              })
+            })(this.selected*1);
+            setStore('selected',this.selected);
+        },
+        proData(pro) {
+            pro = pro.split(";");
+            let data = [];
+            for (let i = 0; i < pro.length; i++) {
+            data.push(pro[i].split(":")[1]);
+            }
+            return data.join(";");
+        },
+        goDetail(item){
+            let id = item.id;
+                this.$router.push({path:'/orderdetail',query:{id}})
+
+        },
+        cancleOrder(id){
+          MessageBox.confirm('确认取消订单么?', '').then(action => {
+                this.$http.post('/api/neworder/cancel/' + id).then(res=>{
+                    if(res.data.success){
+                        Toast({
+                            message: '已成功取消订单',
+                            position: 'bottom',
+                            duration: 1.5e3
+                        });
+                        window.location.reload();
+                    }
+                })
+            });
+        },
+        payOrder(n){
+            this.$http.post('/api/neworder/pay' ,{
+                OrderNo:n
+            }).then(res=>{
+                console.log(res.data);
+                if(res.data.success){
+                    window.location.reload();
+                }
+            })
+      },
+    },
+    filters:{
+        two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+        },
+        payTimeout:function(value){
+          var date = new Date(value.replace('T',' '))*1;
+          var m = (new Date() * 1 - 2*60*60*1000 - date);
+          if(m>0){
+            return '支付超时'
+          }
+          else{
+            var mm = Math.floor(-m /1000/60);
+            if(mm>60){
+              return Math.floor(mm/60)+'小时' + (mm-60) + '分钟后超时'
+            }
+            return mm +'分钟后超时';
+          }
+          return '';
+        }
+    }
+}
+</script>
+
+<style scoped>
+/* messagebox */
+.mint-msgbox-confirm{
+    color: #ec1019;
+    font-size: .4rem;
+}
+.mint-msgbox-cancel{
+    font-size: .4rem;
+}
+.order{
+    background: #f7f7f7;
+}
+.mint-navbar .mint-tab-item.is-selected {
+    border-bottom: 2px solid #ec1019;
+    color: #ec1019;
+    margin: 0;
+}
+.mint-navbar .mint-tab-item {
+    box-sizing: border-box;
+    padding: 0;
+    height: 1.17333rem;
+    color: #333;
+    border-bottom: 1px solid #f4f4f4;
+}
+.mint-navbar .mint-tab-item .mint-tab-item-label .wrp {
+    line-height: 1.17333rem ;
+    font-size: .4rem;
+}
+.all-order{
+    padding: .32rem;
+    overflow: hidden;
+
+}
+.all-order>li{
+    box-sizing: border-box;
+    border: 1px solid #f4f4f4;
+    background: #fff;
+    margin-bottom:0.32rem;
+    font-size: .4rem;
+    color: #333;
+}
+.all-order>li h3{
+    height: .946667rem;
+    line-height: .946667rem;
+     padding: 0 .28rem;
+     border-bottom: 1px solid #f4f4f4;
+}
+.all-order>li h3>span{
+    color: #ec1019;
+    float: right;
+}
+.good-wrp{
+    overflow: hidden;
+    padding:  .28rem;
+    box-sizing: border-box;
+    border-top: 1px solid #f4f4f4;
+}
+.good-wrp:nth-of-type(1){
+    border-top: 0
+}
+.good-wrp>img{
+    width: 1.44rem;
+    height: 1.44rem;
+    float: left;
+    margin-right: .2rem;
+}
+.good-wrp>p>span{
+    float: right;
+}
+.good-wrp>p>em{
+    max-width: 5rem;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.refund>li>.good-wrp>p:nth-of-type(1) >span{
+    color: #999;
+}
+.refund>li>.good-wrp>p:nth-of-type(2) >span{
+    color: #ec1019;
+}
+/* .good-wrp>p:nth-of-type(1) >span{
+    color: #ec1019;
+} */
+.good-wrp>p:nth-of-type(2){
+    color: #999;
+    margin-top: .56rem;
+    font-size:0.32rem;
+}
+.good-wrp>p:nth-of-type(2)>span{
+  font-size:0.4rem;
+  margin-top:-5px;
+}
+.total{
+    border-top: 1px solid #f4f4f4;
+    height: .946667rem;
+    line-height: .946667rem;
+    text-align: right;
+    padding: 0 .32rem;
+    font-size: .4rem;
+    color: #333;
+}
+.total>span{
+    color: #ec1019;
+    font-size: .48rem;
+}
+.bottom-tip{
+    border-top: 1px solid #f4f4f4;
+    padding: .2rem .32rem;
+    font-size: .36rem;
+    color: #858585;
+    overflow: hidden;
+}
+.bottom-tip>span{
+    display: block;
+    float: right;
+    border-radius: 3px;
+    margin-left: .2rem;
+    padding:0  .28rem;
+    height: .56rem;
+    line-height: .6rem;
+}
+.bottom-tip>span:nth-of-type(1){
+    background: #ec1019;
+    color: #fff;
+}
+.bottom-tip>span:nth-of-type(2),.bottom-tip>span:nth-of-type(3){
+    border: 1px solid #e7e7e7;
+}
+.blank-page{
+    text-align: center;
+    font-size: .48rem;
+    color: #333;
+    min-height: 13.5rem;
+    line-height: 12rem
+}
+.refund-status{
+    padding: 0 .32rem;
+    height: 1rem;
+    line-height: 1rem;
+    font-size: .4rem;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+.refund-see{
+    padding: .2rem .32rem;
+    height: 1rem;
+    line-height: 1rem;
+    font-size: .4rem;
+    box-sizing: border-box;
+    background: #fff;
+}
+.refund-see>span{
+    width: 1.92rem;
+    height: .6rem;
+    line-height: .6rem;
+    text-align: center;
+    display: inline-block;
+    float: right;
+    border: 1px solid #ec1019;
+    border-radius: 3px;
+    color: #ec1019;
+}
+</style>

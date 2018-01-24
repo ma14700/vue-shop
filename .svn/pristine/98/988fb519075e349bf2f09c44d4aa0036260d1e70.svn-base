@@ -1,0 +1,158 @@
+<template>
+    <div class="trans">
+        <div class="tran-head clearfix" v-if="flag == true">
+            <div class="tran-head-left"><img :src="tranDetail.orderItem[0].itemPicUrl" alt="" ></div>
+            <div class="tran-head-right">
+                <p>物流状态 {{tranList[0].context}}</p>
+                <div>
+                    <p>订单号:{{tranDetail.orderDelivery.postNo}}</p>
+                    <p>信息来源:{{tranDetail.orderDelivery.expressName}}</p>
+                </div>
+            </div>
+        </div>
+        <div class="tran-content">
+            <div class="tran-content-li" v-for="(item,index) in tranList" :class="[0==index ? 'trans-green' : '']"><span :class="[0==index ? 'tran-radius' : '']"></span>{{item.context}}
+                <span>{{item.time}}</span>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+export default {
+    data(){
+        return{
+            tranList:[],
+            tranDetail:[],
+            flag:false
+        }
+    },
+    created(){
+        this.transtart();
+    },
+    methods:{
+        transtart(){
+            let Id = this.$route.query.id;
+            console.log(Id);
+            this.$http.post('/api/neworder/detail/' + this.$route.query.id).then(res=>{
+                if(res.data.message == 'success'){
+                    this.tranDetail = res.data.data;
+                    console.log(res);
+                    let post = this.tranDetail.orderDelivery.postNo;
+                    this.$http.post('/api/express',{
+                        ComCode:'auto',
+                        PostNo:post
+                    }).then(res=>{
+                        if(res.data.message == 'ok'){
+                            this.tranList = res.data.data;
+                            this.flag = true;
+                        }else{
+                            alert(res.data.message)
+                        }
+                    })
+                }else{
+                    alert(res.data.message);
+                    this.$router.push('/home')
+                }
+            })
+
+        }
+    }
+}
+</script>
+
+<style scoped>
+.tran-head{
+    border-top: 1px solid #d8d8d8;
+    border-bottom: 1px solid #d8d8d8;
+    box-sizing: border-box;
+    padding:.4rem;
+    background: #fff;
+}
+.tran-head:before{
+  clear: both;
+}
+.tran-head-left{
+    width: 1.6rem;
+    margin-right:0.4rem;
+    float: left;
+}
+.tran-head-left img{
+    width: 1.6rem;
+    height: 1.6rem;
+}
+.trans{
+    width: 10rem;
+    box-sizing: border-box;
+}
+.tran-head-right{
+
+}
+.tran-head-right>p{
+    font-size: .426667rem;
+    color: #000;
+    font-weight: 500;
+}
+.tran-head-right div>p{
+    line-height: .533333rem;
+    font-size: .346667rem;
+    color: #999999;
+}
+.tran-content{
+    box-sizing: border-box;
+    padding: .32rem .8rem 1.2rem 0.8rem;
+    border-top: 1px solid #d8d8d8;
+    border-bottom: 1px solid #d8d8d8;
+    margin-top: .4rem;
+    background-color: #fff;
+}
+.tran-content-li>span:last-child{
+    display: block;
+    line-height: .56rem;
+    font-size: .346667rem;
+
+}
+.tran-content-li>span:first-child{
+    width: .4rem;
+    height: .4rem;
+    background: #999;
+    position: absolute;
+    left: -2.4%;
+    top: 0.42rem;
+    display: block;
+    border-radius: 50%;
+}
+.tran-content-li{
+    border-bottom: 1px solid #d8d8d8;
+    border-left: 1px solid #d8d8d8;
+    box-sizing: border-box;
+    padding: 0.4rem .533333rem;
+    position: relative;
+    line-height:0.4rem;
+    color:#666;
+}
+.tran-content-li:last-child{
+    border-bottom: none;
+}
+.tran-radius{
+    background: #60cc83 !important;
+    z-index: 2;
+    width: .46rem!important;
+    height: .46rem!important;
+    left:-2.8%!important;
+}
+/* .tran-radius::after{
+    content: '';
+    width:.586667rem;
+    height: .586667rem;
+    background: #c9eed4;
+    position: absolute;
+    left: -42%;
+    top: -30%;
+    z-index: 1;
+    border-radius: 50%;
+} */
+.trans-green{
+    color: #60cc83 !important;
+}
+</style>
+

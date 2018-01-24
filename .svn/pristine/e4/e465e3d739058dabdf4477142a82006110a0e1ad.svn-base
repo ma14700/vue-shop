@@ -1,0 +1,378 @@
+<template>
+  <div class="orderdetail">
+        <div class="order-address1" v-if="transList.length>0">
+            <div >{{transList[0].context}}</div>
+            <div >{{transList[0].time}}</div>
+        </div>
+        <div class="order-address">
+            <h2>收货人：{{receiveAddress.receiverName}} <span>{{receiveAddress.mobile}}</span></h2>
+            <h2>收货地址：{{receiveAddress.address}}</h2>
+            <p></p>
+        </div>
+        <div class="user-msg">
+            买家留言：<p v-if="orderdetail.buyerComments">{{orderdetail.buyerComments}}</p>
+            <p v-else>留言为空</p>
+        </div>
+        <div class="order-good">
+            <h2>
+                <img :src="orderdetail.supplierLogo" alt="">
+                {{orderdetail.supplierName}}
+                <span>{{orderdetail.orderStatusRemark}}</span>
+            </h2>
+            <ul>
+                <li v-for="(item,index) in orderdetail.orderItem" :key="index">
+                    <img :src="item.itemPicUrl" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname"><em>{{item.itemName}}</em><span>¥{{item.itemUnitPrice}}</span></p>
+                        <p class="order-gdinfo">
+                            <em>{{proData(item.itemSku)}}</em>
+                            <span>×{{item.itemCount}}</span></p>
+                    </div>
+                    
+                </li>
+            </ul>
+            <p v-if="orderdetail.orderStatus==2 ||orderdetail.orderStatus==3 ">
+                <span @click="goRefund(orderdetail.id)" >退款</span>
+            </p>
+        </div>
+        <ul class="order-price order-info">
+            <li>
+                商品总价<span>¥{{totalPrice}}</span>
+            </li>
+            <li>
+                运费（快递）<span>¥00.00</span>
+            </li>
+            <li>
+                活动优惠<span>－¥{{orderdetail.couponAmount}}</span>
+            </li>
+            <li>
+                订单总价<span>¥{{totalPrice}}</span>
+            </li>
+        </ul>
+        <ul class="order-info" >
+            <li >
+                订单编号：{{orderdetail.orderNo}}
+            </li>
+            <li v-if="orderdetail.orderStatus>1">
+                银行卡交易号：0000000000000000
+            </li>
+            <li v-for="i in orderdetail.orderStatusTimeline" :key="i.id" v-if="i.afterChangeStatus == 1 || i.afterChangeStatus == 2 ||i.afterChangeStatus == 3  "> 
+                <span v-if="i.afterChangeStatus == 1">创建时间：{{i.happendTime | date}}</span> 
+                <span v-else-if="i.afterChangeStatus == 2">付款时间：{{i.happendTime | date}}</span>
+                 <span v-else>发货时间：{{i.happendTime | date}}</span>
+            </li>
+        </ul>
+        <div style="height:1.2rem"></div>
+        <div class="order-status" v-if="orderdetail.orderStatus == 1">
+            <span @click="cancleOrder(orderdetail.id)">取消订单</span>
+            <span class="red" @click="payOrder(orderdetail.orderNo)">立即支付</span>
+        </div>
+        <div class="order-status" v-else-if="orderdetail.orderStatus == 2 || orderdetail.orderStatus == 3">
+            <span>延长发货</span>
+            <span @click="watchtrans()" v-if="orderdetail.orderStatus == 3">查看物流</span>
+            <span class="red" v-if="orderdetail.orderStatus == 3">确认收货</span>
+            
+        </div>
+        
+  </div>
+</template>
+<script>
+import { Toast } from 'mint-ui';
+export default {
+  data(){
+      return{
+        orderdetail:[],
+        receiveAddress:[],
+        transList:[]
+      }
+  },
+  created(){
+      this.getOrder();
+  },
+  methods:{
+      watchtrans(){
+          this.$router.push({path:'/tranparcel',query:{id:this.$route.query.id}})
+      },
+      getOrder(){
+          this.$http.post('/api/neworder/detail/' + this.$route.query.id).then(res => {
+            console.log(res);
+            this.orderdetail = res.data.data;
+            this.receiveAddress =  res.data.data.receiveAddress;
+            if(this.orderdetail.orderDelivery){
+                this.$http.post('/api/express',{
+                    ComCode:this.orderdetail.orderDelivery.expressCode,
+                    PostNo:this.orderdetail.orderDelivery.postNo
+                }).then(res=>{
+                    console.log(res);
+                    this.transList = res.data.data;
+                })
+            }
+          })
+
+      },
+      cancleOrder(id){
+            this.$http.post('/api/neworder/cancel/' + id).then(res=>{
+              console.log(res.data.success);
+              if(res.data.success){
+                Toast({
+                    message: '已成功取消订单',
+                    position: 'bottom',
+                    duration: 1.5e3
+                });
+                this.$router.push({path:'/order',query:{selected: '0'}})
+              }
+          })
+      },
+      payOrder(n){
+            this.$http.post('/api/neworder/pay' ,{
+                OrderNo:n
+            }).then(res=>{
+                console.log(res.data);
+                if(res.data.success){
+                    window.location.reload();
+                }
+            })
+      },
+    proData(pro) {
+            pro = pro.split(";");
+            let data = [];
+            for (let i = 0; i < pro.length; i++) {
+            data.push(pro[i].split(":")[1]);
+            }
+            return data.join(";");
+    },
+    goRefund(id){
+        this.$router.push({path:'/refund',query:{id}})
+    }
+  },
+  computed:{
+      totalPrice:function(){
+        let orderItem =this.orderdetail.orderItem; 
+        let totalprice = 0;
+        if(orderItem){
+            orderItem.map(function(i){
+            totalprice = i.itemCount* i.itemUnitPrice;
+            });
+        }
+        return totalprice.toFixed(2);
+      }
+  },
+  filters:{
+    date(value) {
+       if (!value) { return '' };
+       let va = value.replace(/T/g, " ").substring(0,19) 
+        return va;
+    },
+  }
+}
+</script>
+<style scoped>
+.order-status{
+    position: fixed;
+    width: 10rem;
+    bottom: 0;
+    background: #fff;
+    text-align: right;
+    padding: .32rem;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.order-status>span{
+    display: inline-block;
+    height: .56rem;
+    border: 1px solid #acacac;
+    border-radius: .28rem;
+    padding: 0 .4rem;
+    color: #acacac;
+    line-height: .56rem;
+    margin-left: .24rem;
+}
+.order-status>span.red{
+    border-color: #ec1019;
+    color: #ec1019;
+}
+.orderdetail{
+    background: #f7f7f7;
+
+}
+.user-msg{
+    overflow:hidden;
+    line-height: .54rem;
+    font-size: .4rem;
+    padding: .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+    box-sizing:border-box;
+}
+.user-msg>p{
+    color: #a9a9a9;
+    width:7.2rem;
+    line-height: .54rem;
+    float:right;
+    word-wrap:break-word;
+}
+.order-address1{
+    box-sizing: border-box;
+    padding: 0.3rem;
+}
+.order-address1>div:first-child{
+    font-size: 0.4rem;
+    line-height: 0.7rem;
+    color: #60cc83;
+}
+.order-address1>div{
+    font-size: 0.32rem;
+}
+.order-address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+}
+.order-address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.order-address >h2>span{
+    margin-left: .72rem;
+}
+.order-address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.order-address > p{
+    margin-top: 10px;
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+    
+}
+.order-address >i{
+    position: absolute;
+    right: .32rem;
+    top: .54rem;
+    font-weight: bold;
+    color: #999
+
+}
+.order-good{
+    overflow: hidden;
+    padding: 0 .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+}
+.order-good>h2{
+    font-size: .4rem;
+    padding:.24rem 0 ;
+    line-height: .68rem;
+    border-bottom: 1px solid #dedede;
+}
+.order-good>h2>img{
+    width: .64rem;
+    height: .64rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1px solid #dedede;
+    float: left;
+    margin-right: .32rem;
+}
+.order-good>h2>span{
+    float: right;
+    color: #ec1019;
+}
+.order-good>ul>li:first-child{
+    
+}
+.order-good>ul>li{
+    
+    padding: .24rem 0;
+    overflow: hidden;
+}
+.order-good>ul>li>img{
+    width: 1.44rem;
+    height: 1.44rem;
+    float: left;
+}
+.order-good>ul>li .gd-wrp{
+    float: left;
+    font-size: .36rem;
+    width: 7.7rem;
+    margin-left: .2rem;
+    height: 1.44rem;
+    line-height: .65rem;
+}
+.gd-wrp>p>em{
+    max-width: 5.5rem;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.order-good>p{
+    border-top: 1px solid #dedede;
+    padding:.16rem 0;
+    box-sizing: border-box;
+    color: #adadad;
+    overflow: hidden;
+}
+
+.order-good>p>span{
+    display: block;
+    padding:0 .4rem;
+    height: .56rem;
+    float: right;
+    text-align: center;
+    border: 1px solid #adadad;
+    line-height: .56rem;
+    border-radius: .28rem;
+}
+.gd-wrp .order-gdname{
+    color: #333;
+}
+.gd-wrp .order-gdname>span{
+    float: right;
+    color: #ec1019
+}
+.gd-wrp .order-gdinfo{
+    color: #999;
+    line-height: .6rem;
+}
+.gd-wrp .order-gdinfo>span{
+    float: right;
+    color: #333;
+}
+.order-info{
+    width: 100%;
+    padding: .32rem;
+    overflow: hidden;
+    background: #fff;
+    box-sizing: border-box;
+    margin-bottom: .2rem;
+}
+.order-info>li{
+    color: #afafaf;
+    font-size: .36rem;
+    line-height: .54rem;
+}
+.order-price>li>span{
+    float: right;
+}
+.order-price>li:last-child{
+    color: #333;
+    font-size: .4rem;
+    margin-top: .2rem;
+}
+.order-price>li:last-child >span{
+    color: #ec1019;
+    font-size: .48rem;
+}
+
+</style>
+
+

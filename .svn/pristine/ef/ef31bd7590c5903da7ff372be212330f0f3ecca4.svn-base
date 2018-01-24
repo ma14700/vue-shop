@@ -1,0 +1,272 @@
+<template>
+  <div>
+      <div class="order-good">
+            <h2>
+                <img src="../../../assets/home/brand.png" alt="">
+                周生生旗舰店
+            </h2>
+            <ul>
+                <li v-for="n in 2" :key="n">
+                    <img src="../../../assets/home/yanshi.png" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">零兑金-好运常来好运常来好运常来</p>
+                        <p class="order-gdinfo">重量：10g</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+            <ul class="reason-detail">
+                <li @click="handelClick('status')">货物状态<span v-text="statusText"><i class="iconfont icon-right "></i></span></li>
+                <li @click="handelClick('reason')">退款原因<span v-text="reasonText"><i class="iconfont icon-right "></i></span></li>
+            </ul>
+            <ul class="reason-detail">
+                <li>退款金额<p>¥998</p></li>
+                <li>退款说明<input type="text" placeholder="选填"></li>
+            </ul>
+
+            <div class="upload-evidence">
+                <h2>上传凭证</h2>
+                <ul>
+                    <li>
+                        <i class="iconfont icon-daifahuo"></i>
+                        <p>上传凭证<br>(最多六张)</p>
+                    </li>
+                </ul>
+            </div>
+            <div style="height:1.2rem"></div>
+            <div class="btm-submit">
+                提交
+            </div>
+             <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="bottom">
+                 <div v-if="modal == 'status'" class="coupon-wrp">
+                     
+                    <h2>货物状态</h2>
+                    <ul>
+                        
+                        <li v-for="(item,index) in refundstatus" :key="index">{{item}}<i class="iconfont " @click="choosestatus(index)" :class="ischoosestatus==index?'icon-duigou':'icon-quan'"></i></li>
+                    </ul>
+                    <p @click="confirmO()">确认</p>
+            
+                 </div>
+                 <div v-if="modal == 'reason'" class="coupon-wrp">
+                    <h2>退款原因</h2>
+                    <ul>
+                        <li v-for="(item,index) in refundreason" :key="index">{{item}}<i class="iconfont " @click="choosereason(index)" :class="ischoosereason==index?'icon-duigou':'icon-quan'"></i></li>
+                    </ul>
+                    <p @click="confirmO()">确认</p>
+                 </div>
+             </mt-popup>
+    </div>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      popupVisible: false,
+      modal: "",
+      refundreason: [
+        "多拍/错拍/不想要",
+        "快递一直未送到",
+        "未按约定时间发货",
+        "快递无跟踪记录",
+        "空包裹/少货",
+        "其他"
+      ],
+      refundstatus: ["未到货", "已到货"],
+      ischoosestatus: 0,
+      ischoosereason: 0,
+      statusText: "请选择",
+      reasonText: "请选择"
+    };
+  },
+  methods: {
+    handelClick(p) {
+      this.modal = p;
+      this.popupVisible = true;
+      if (p == "status") {
+        this.choosestatus();
+      } else {
+        this.choosereason();
+      }
+    },
+    choosestatus(i) {
+      this.ischoosestatus = i;
+      this.statusText = this.refundstatus[i];
+    },
+    choosereason(i) {
+      this.ischoosereason = i;
+      this.reasonText = this.refundreason[i];
+    },
+    confirmO(){
+        this.popupVisible = false;
+    }
+  }
+};
+</script>
+<style scoped>
+.coupon-wrp {
+  padding-top: 0.48rem;
+  color: #333;
+  min-height: 8.4rem;
+  position: relative;
+}
+.coupon-wrp > h2 {
+  font-size: 0.44rem;
+  text-align: center;
+}
+.coupon-wrp > ul {
+  max-height: 5.8rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.coupon-wrp > ul > li:first-child {
+  border-top: 0;
+}
+.coupon-wrp > ul > li {
+  padding: 0 0.48rem;
+  font-size: 0.36rem;
+  box-sizing: border-box;
+  border-top: 1px solid #eee;
+  line-height: 1rem;
+  height: 1rem;
+}
+.coupon-wrp > ul > li > i {
+  float: right;
+}
+.coupon-wrp > ul > li > i.icon-duigou {
+  color: #ec1019;
+}
+.coupon-wrp > p {
+  height: 1.12rem;
+  background: #ec1019;
+  text-align: center;
+  color: #fff;
+  font-size: 0.44rem;
+  line-height: 1.12rem;
+  position: absolute;
+  bottom: 0;
+  width: 10rem;
+}
+.mint-popup {
+  width: 10rem;
+}
+.upload-evidence {
+  padding: 0.32rem;
+  overflow: hidden;
+  background: #fff;
+  margin-top: 0.2rem;
+}
+.upload-evidence > h2 {
+  font-size: 0.4rem;
+  margin-bottom: 0.32rem;
+}
+.upload-evidence > ul > li {
+  border: 1px dashed #eee;
+  width: 1.68rem;
+  height: 1.68rem;
+  box-sizing: border-box;
+  text-align: center;
+  color: #999;
+}
+.upload-evidence > ul > li > i {
+  font-size: 0.6rem;
+}
+.upload-evidence > ul > li > p {
+  font-size: 12px;
+  margin-top: 3px;
+}
+.reason-detail {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  width: 10rem;
+  box-sizing: border-box;
+  margin-top: 0.2rem;
+  background: #fff;
+}
+
+.reason-detail > li {
+  width: 100%;
+  line-height: 1rem;
+  height: 1rem;
+  font-size: 0.4rem;
+  color: #333;
+  overflow: hidden;
+}
+.reason-detail > li > span {
+  float: right;
+  color: #999;
+  font-size: 0.36rem;
+  display: inline-block;
+}
+.reason-detail > li > p {
+  display: inline;
+  color: #ec1019;
+  margin-left: 0.32rem;
+}
+.reason-detail > li > input {
+  border: none;
+  margin-left: 0.32rem;
+  height: 1rem;
+  width: 7.18rem;
+  font-size: 0.36rem;
+  color: #999;
+}
+.btm-submit {
+  height: 1.2rem;
+  line-height: 1.2rem;
+  color: #fff;
+  text-align: center;
+  font-size: 0.44rem;
+  background: #ec1019;
+  position: fixed;
+  bottom: 0;
+  width: 10rem;
+}
+.order-good {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  background: #fff;
+  margin-bottom: 0.2rem;
+}
+.order-good > h2 {
+  font-size: 0.4rem;
+  padding: 0.24rem 0;
+  line-height: 0.68rem;
+}
+.order-good > h2 > img {
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #dedede;
+  float: left;
+  margin-right: 0.32rem;
+}
+.order-good > ul > li:first-child {
+  border-top: 1px solid #dedede;
+}
+.order-good > ul > li {
+  /* border-bottom: 1px solid #dedede; */
+  padding: 0.24rem 0;
+  overflow: hidden;
+}
+.order-good > ul > li > img {
+  width: 1.08rem;
+  height: 1.08rem;
+  float: left;
+}
+.order-good > ul > li .gd-wrp {
+  float: left;
+  font-size: 0.36rem;
+  width: 8.08rem;
+  margin-left: 0.2rem;
+}
+.gd-wrp .order-gdname {
+  color: #333;
+}
+.gd-wrp .order-gdinfo {
+  color: #999;
+  line-height: 0.6rem;
+}
+</style>
+

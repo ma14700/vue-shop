@@ -1,0 +1,459 @@
+<template>
+  <div>
+      <div class="order-good">
+            <h2>
+                <img :src="orderInfo.supplierLogo" alt="">
+                {{orderInfo.supplierName}}
+            </h2>
+            <ul>
+                <li v-for="n in orderInfo.orderItem" :key="n.id">
+                    <img :src="n.itemPicUrl" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">{{n.itemName}}</p>
+                        <p class="order-gdinfo">重量：10g</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+            <ul class="reason-detail">
+               <li @click="handelClick('status')">货物状态<i class="iconfont icon-right "></i><span v-text="statusText"></span></li>
+                <li @click="handelClick('reason')">退款原因<i class="iconfont icon-right "></i><span v-text="reasonText"></span></li>
+            </ul>
+            <ul class="reason-detail">
+                <li>退款金额<p>¥{{orderInfo.orderTotalAmount | two}}</p></li>
+                <li>退款说明<input type="text" placeholder="必填" v-model="hushStatus"></li>
+            </ul>
+
+            <div class="upload-evidence">
+                <h2>上传凭证</h2>
+                <ul>
+                    <li v-for="(item,index) in uploadFiles" :key="index">
+                      <img v-lazy="item" alt="">
+                      <span class="iconfont icon-guanbi little-button" @click="deleteImg(index)"></span>
+                    </li>
+                    <li v-if="uploadFiles.length < 6">
+                          <i class="iconfont icon-xiangji"></i>
+                          <p @click="uploadItem(file)">上传凭证<br>{{uploadFiles.length}}/6</p>
+                          <vue-file-upload url="/api/handler/upload" class="iconfont icon-right" name="imgFile" :auto-upload="true" :compress="uploadCompress" :filters="uploadFilters" :events="uploadEvents"></vue-file-upload>
+                        </li>
+                    <!-- <li>
+                        <i class="iconfont icon-daifahuo"></i>
+                        <p>上传凭证<br>(最多六张)</p>
+                    </li> -->
+                </ul>
+            </div>
+            <div style="height:1.2rem"></div>
+            <div class="btm-submit" @click="goodsubmit()">
+                提交
+            </div>
+             <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="bottom">
+                 <div v-if="modal == 'reason'" class="coupon-wrp">
+                    <h2>退款原因</h2>
+                    <ul>
+                        <li v-for="(item,index) in refundreason" :key="index">{{item}}<i class="iconfont " @click="choosereason(index)" :class="ischoosereason==index?'icon-duigou':'icon-quan'"></i></li>
+                        
+                    </ul>
+                    <p @click="confirmO()">确认</p>
+                 </div>
+                 <div v-if="modal == 'status'" class="coupon-wrp">
+                     
+                    <h2>货物状态</h2>
+                    <ul>
+                        
+                        <li v-for="(item,index) in refundstatus" :key="index">{{item}}<i class="iconfont " @click="choosestatus(index)" :class="ischoosestatus==index?'icon-duigou':'icon-quan'"></i></li>
+                    </ul>
+                    <p @click="confirmO()">确认</p>
+            
+                 </div>
+             </mt-popup>
+    </div>
+</template>
+<script>
+import VueFileUpload from 'vue-file-upload-with-compress';
+import { ImageCompress } from '../../../config/mUtils';
+import { Toast } from 'mint-ui';
+import { MessageBox } from 'mint-ui';
+export default {
+  data() {
+     var __this = this;
+    return {
+      hushStatus:'',//退款说明
+      orderInfo:[],
+      popupVisible: false,
+      modal: "",
+      refundreason: [
+        "多拍/错拍/不想要",
+        "快递一直未送到",
+        "未按约定时间发货",
+        "快递无跟踪记录",
+        "空包裹/少货",
+        "其他"
+      ],
+      refundstatus: ["未到货", "已到货"],
+      ischoosestatus:0,
+      ischoosereason: 0,
+      reasonText: "请选择",
+      statusText:'请选择',
+      file: [],
+      files: [],
+      uploadFiles: [],
+      uploadEvents: {
+        onCompleteUpload: function(file, res, status) {
+          if (res && res.success) {
+            __this.uploadFiles.push(res.url);
+            Toast({
+              message: res.success ? "上传成功" : res.message,
+              position: "bottom",
+              duration: 1.5e3
+            });
+          }
+          __this.RatePicture = __this.uploadFiles.join(",");
+        },
+        onBeforeUpload: function() {
+          Toast({
+            message: "正在上传..",
+            position: "bottom",
+            duration: 1.5e3
+          });
+        }
+      },
+      uploadFilters: [
+        {
+          name: "imageFilter",
+          fn(file) {
+            var type =
+              "|" + file.type.slice(file.type.lastIndexOf("/") + 1) + "|";
+            if ("|jpg|png|jpeg|bmp|".indexOf(type) == -1) {
+              //mui.toast('不支持的文件类型');
+              return false;
+            }
+            return true;
+          }
+        }
+      ],
+      uploadCompress: {
+        enable: true,
+        compresor: function(file, callback) {
+          let instance = Toast({
+            message: "正在压缩..",
+            iconClass: "compress"
+          });
+
+          ImageCompress(file, 0.8, "height", function(nfile) {
+            callback(nfile);
+            instance.close();
+          });
+        }
+      }
+    }
+  },
+  components:{
+    VueFileUpload,
+  },
+  created(){
+    this.getOrder();
+  },
+  methods: {
+    //提交内容
+    goodsubmit(){
+      if(this.statusText == '请选择'){
+          Toast({
+            message: '请选择货物状态',
+            position: 'bottom',
+            duration: 2000
+          });
+      }else if(this.reasonText == '请选择'){
+          Toast({
+            message: '请选择退款原因',
+            position: 'bottom',
+            duration: 2000
+          });
+      }else if(this.hushStatus == ''){
+          Toast({
+            message: '请输入退款说明',
+            position: 'bottom',
+            duration: 2000
+          });
+      }else{
+          this.$http.post('/api/neworder/rejected/'+this.$route.query.id,{
+            Reason:this.reasonText,
+            GoodsStatus:this.statusText,
+            Remark:this.hushStatus,
+            VoucherImgs:this.RatePicture
+          }).then(res=>{
+            if(res.data.success == true){
+                 MessageBox.alert('退货成功').then(action => {
+                    this.$router.push('/order')
+                });
+            }else{
+                MessageBox.alert('退货失败，请重新提交').then(action => {
+                    
+                });
+            }
+          })
+      }
+    },
+    getOrder(){
+      this.$http.post('/api/neworder/detail/' + this.$route.query.id).then(res => {
+        console.log(res);
+         this.orderInfo = res.data.data;
+      })
+    },
+    handelClick(p) {
+      this.modal = p;
+      this.popupVisible = true;
+      this.choosereason();
+    },
+    choosereason(i) {
+      this.ischoosereason = i;
+      this.reasonText = this.refundreason[i];
+      console.log(this.reasonText);
+    },
+    choosestatus(i) {
+      this.ischoosestatus = i;
+      this.statusText = this.refundstatus[i];
+      console.log(this.statusText)
+    },
+    confirmO() {
+      this.popupVisible = false;
+    },
+    deleteImg(index) {
+      this.uploadFiles.splice(index, 1);
+      this.RatePicture = this.uploadFiles.join(",");
+    },
+    //上传图片
+        onStatus(file) {
+            if (file.isSuccess) {
+                return "上传成功";
+            } else if (file.isError) {
+                return "上传失败";
+            } else if (file.isUploading) {
+                return "正在上传";
+            } else {
+                return "待上传";
+            }
+        },
+        onAddItem(files) {
+            this.files = files;
+        },
+        uploadItem(file) {
+            //单个文件上传
+            file.upload();
+        },
+        uploadAll() {
+            //上传所有文件
+            this.$refs.vueFileUploader.uploadAll();
+        },
+        clearAll() {
+            //清空所有文件
+            this.$refs.vueFileUploader.clearAll();
+        }
+  },
+  filters:{
+    two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+        },
+  }
+};
+</script>
+<style scoped>
+/* messagebox */
+.mint-msgbox-confirm{
+    color: #ec1019;
+    font-size: .4rem;
+}
+.mint-msgbox-cancel{
+    font-size: .4rem;
+}
+.fileupload-button{
+    opacity: .1 !important;
+}
+.coupon-wrp {
+  padding-top: 0.48rem;
+  color: #333;
+  min-height: 8.4rem;
+  position: relative;
+}
+.coupon-wrp > h2 {
+  font-size: 0.44rem;
+  text-align: center;
+}
+.coupon-wrp > ul {
+  max-height: 5.8rem;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.coupon-wrp > ul > li:first-child {
+  border-top: 0;
+}
+.coupon-wrp > ul > li {
+  padding: 0 0.48rem;
+  font-size: 0.36rem;
+  box-sizing: border-box;
+  border-top: 1px solid #eee;
+  line-height: 1rem;
+  height: 1rem;
+}
+.coupon-wrp > ul > li > i {
+  float: right;
+}
+.coupon-wrp > ul > li > i.icon-duigou {
+  color: #ec1019;
+}
+.coupon-wrp > p {
+  height: 1.12rem;
+  background: #ec1019;
+  text-align: center;
+  color: #fff;
+  font-size: 0.44rem;
+  line-height: 1.12rem;
+  position: absolute;
+  bottom: 0;
+  width: 10rem;
+}
+.mint-popup {
+  width: 10rem;
+}
+.upload-evidence {
+  padding: 0.32rem;
+  overflow: hidden;
+  background: #fff;
+  margin-top: 0.2rem;
+}
+.upload-evidence > h2 {
+  font-size: 0.4rem;
+  margin-bottom: 0.32rem;
+}
+.upload-evidence > ul > li {
+  border: 1px dashed #eee;
+  width: 1.68rem;
+  height: 1.68rem;
+  box-sizing: border-box;
+  text-align: center;
+  color: #999;
+  position: relative;
+  float: left;
+  margin-left: .2rem;
+}
+.upload-evidence > ul > li>.little-button{
+  position: absolute;
+  right: -.2rem;
+  top: -.2rem;
+  font-size: .4rem;
+}
+.upload-evidence > ul > li>img{
+  width: 100%;
+  height: 100%;
+}
+.upload-evidence > ul > li > i {
+  font-size: 0.6rem;
+}
+.upload-evidence > ul > li > p {
+  font-size: 12px;
+  margin-top: 3px;
+}
+.reason-detail {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  width: 10rem;
+  box-sizing: border-box;
+  margin-top: 0.2rem;
+  background: #fff;
+}
+
+.reason-detail > li {
+  width: 100%;
+  line-height: 1rem;
+  height: 1rem;
+  font-size: 0.4rem;
+  color: #333;
+  overflow: hidden;
+}
+.reason-detail > li > span {
+  float: right;
+  color: #999;
+  font-size: 0.36rem;
+  display: inline-block;
+}
+.reason-detail > li > i {
+  float: right;
+  color: #999;
+  font-size: 0.36rem;
+  display: inline-block;
+}
+.reason-detail > li > p {
+  display: inline;
+  color: #ec1019;
+  margin-left: 0.32rem;
+}
+.reason-detail > li > input {
+  border: none;
+  margin-left: 0.32rem;
+  height: 1rem;
+  width: 7.18rem;
+  font-size: 0.36rem;
+  color: #999;
+}
+.btm-submit {
+  height: 1.2rem;
+  line-height: 1.2rem;
+  color: #fff;
+  text-align: center;
+  font-size: 0.44rem;
+  background: #ec1019;
+  position: fixed;
+  bottom: 0;
+  width: 10rem;
+}
+.order-good {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  background: #fff;
+  margin-bottom: 0.2rem;
+}
+.order-good > h2 {
+  font-size: 0.4rem;
+  padding: 0.24rem 0;
+  line-height: 0.68rem;
+}
+.order-good > h2 > img {
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #dedede;
+  float: left;
+  margin-right: 0.32rem;
+}
+.order-good > ul > li:first-child {
+  border-top: 1px solid #dedede;
+}
+.order-good > ul > li {
+  /* border-bottom: 1px solid #dedede; */
+  padding: 0.24rem 0;
+  overflow: hidden;
+}
+.order-good > ul > li > img {
+  width: 1.728rem;
+  height: 1.44rem;
+  float: left;
+}
+.order-good > ul > li .gd-wrp {
+  float: left;
+  font-size: 0.36rem;
+  width: 7.432rem;
+  margin-left: 0.2rem;
+  line-height:.8rem;
+}
+.gd-wrp .order-gdname {
+  color: #333;
+}
+.gd-wrp .order-gdinfo {
+  color: #999;
+  line-height: 0.6rem;
+}
+
+</style>
+

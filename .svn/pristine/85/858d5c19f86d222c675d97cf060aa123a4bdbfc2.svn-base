@@ -1,0 +1,223 @@
+<template>
+  <div class="orderdetail">
+        <div class="order-address">
+            <h2>收货人：我叫邮储 <span>0371-666666</span></h2>
+            <h2>收货地址：河南省郑州市郑东新区建业总部港</h2>
+            <p></p>
+            <i class="iconfont icon-right"></i>
+        </div>
+        <div class="user-msg">
+            买家留言：<span>留言留言留言留言留言留言</span>
+        </div>
+        <div class="order-good">
+            <h2>
+                <img src="../../assets/home/brand.png" alt="">
+                周生生旗舰店
+            </h2>
+            <ul>
+                <li v-for="n in 2" :key="n">
+                    <img src="../../assets/home/yanshi.png" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">零兑金-好运常来好运常来好运常来<span>¥1080</span></p>
+                        <p class="order-gdinfo">材质：金银<span>×1</span></p>
+                    </div>
+                    
+                </li>
+            </ul>
+            <p>
+                <span>退款</span>
+            </p>
+        </div>
+        <ul class="order-info">
+            <li>
+                订单编号：12345678990
+            </li>
+            <li>
+                订单编号：12345678990
+            </li>
+            <li>
+                订单编号：12345678990
+            </li><li>
+                订单编号：12345678990
+            </li>
+        </ul>
+        <div class="order-status">
+            <span>延长发货</span>
+            <span>查看物流</span>
+            <span class="red">确认收货</span>
+        </div>
+  </div>
+</template>
+<script>
+export default {
+  data(){
+      return{
+
+      }
+  },
+  methods:{
+
+  }
+}
+</script>
+<style scoped>
+.order-status{
+    position: fixed;
+    width: 10rem;
+    height: 1.2rem;
+    bottom: 0;
+    background: #fff;
+    text-align: right;
+    padding: .32rem;
+    box-sizing: border-box;
+}
+.order-status>span{
+    display: inline-block;
+    height: .56rem;
+    border: 1px solid #acacac;
+    border-radius: .28rem;
+    padding: 0 .4rem;
+    color: #acacac;
+    line-height: .56rem;
+    margin-left: .24rem;
+}
+.order-status>span.red{
+    border-color: #ec1019;
+    color: #ec1019;
+}
+.orderdetail{
+    background: #f7f7f7;
+
+}
+.user-msg{
+    height: 1rem;
+    line-height: 1rem;
+    font-size: .4rem;
+    padding: 0 .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+}
+.user-msg>span{
+    color: #a9a9a9;
+}
+    .order-address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+}
+.order-address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.order-address >h2>span{
+    margin-left: .72rem;
+}
+.order-address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.order-address > p{
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+    
+}
+.order-address >i{
+    position: absolute;
+    right: .32rem;
+    top: .54rem;
+    font-weight: bold;
+    color: #999
+
+}
+.order-good{
+    overflow: hidden;
+    padding: 0 .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+}
+.order-good>h2{
+    font-size: .4rem;
+    padding:.24rem 0 ;
+    line-height: .68rem
+}
+.order-good>h2>img{
+    width: .64rem;
+    height: .64rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1px solid #dedede;
+    float: left;
+    margin-right: .32rem;
+}
+.order-good>ul>li:first-child{
+    border-top: 1px solid #dedede;
+}
+.order-good>ul>li{
+    border-bottom: 1px solid #dedede;
+    padding: .24rem 0;
+    overflow: hidden;
+}
+.order-good>ul>li>img{
+    width: 1.08rem;
+    height: 1.08rem;
+    float: left;
+}
+.order-good>ul>li .gd-wrp{
+    float: left;
+    font-size: .36rem;
+    width: 8.08rem;
+    margin-left: .2rem;
+}
+.order-good>p{
+    height: .88rem;
+    padding:.16rem 0;
+    box-sizing: border-box;
+    color: #adadad
+}
+.order-good>p>span{
+    display: block;
+    width: 1.36rem;
+    height: .56rem;
+    float: right;
+    text-align: center;
+    border: 1px solid #adadad;
+    line-height: .56rem;
+    border-radius: .28rem;
+}
+.gd-wrp .order-gdname{
+    color: #333;
+}
+.gd-wrp .order-gdname>span{
+    float: right;
+    color: #ec1019
+}
+.gd-wrp .order-gdinfo{
+    color: #999;
+    line-height: .6rem;
+}
+.gd-wrp .order-gdinfo>span{
+    float: right;
+    color: #333;
+}
+.order-info{
+    width: 100%;
+    padding: .32rem;
+    overflow: hidden;
+    background: #fff;
+}
+.order-info>li{
+    color: #afafaf;
+    font-size: .36rem;
+    line-height: .54rem;
+}
+</style>
+
+

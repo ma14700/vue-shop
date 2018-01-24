@@ -1,0 +1,159 @@
+<template>
+  <div class="refunddetail">
+      <div class="wrp">
+        <h2>退回银行卡<span>¥899</span></h2>
+        <ul class="refund-flow">
+            <li>
+                 <p>卖家退款</p>
+                 <span>2017-11-08 </span>
+            </li>
+            <li>
+                 <p>银行受理</p>
+                 <span>2017-11-08 </span>
+            </li>
+            <li>
+                 <p>退款成功</p>
+                 <span>2017-11-08 </span>
+            </li>
+           
+        </ul>
+      </div>
+      <div class="wrp">
+        <h2>退款信息</h2>
+        <ul class="all-order refund">
+            <li>
+                <!-- <h3>周生生</h3> -->
+                <div class="good-wrp">
+                    <img src="../../assets/home/yanshi.png" alt="">
+                    <p>零兑金-好运常来好运常来<span>×1</span></p>
+                    <p>材质：金银<span>退款金额：¥1080</span></p>
+                </div>
+            </li>
+        </ul>
+        <ul class="refund-reason">
+            <li>退款原因：</li>
+            <li>申请件数：</li>
+            <li>申请时间：</li>
+            <li>退款编号：</li>
+        </ul>
+      </div>
+      
+
+  </div>
+</template>
+<script>
+export default {
+  data(){
+      return{
+
+      }
+  },
+
+}
+</script>
+
+<style scoped>
+.refund-flow{
+    padding: .32rem;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box
+}
+.refund-flow>li{
+    float: left;
+    width: 33.3%;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: .36rem;
+    line-height: .48rem;
+    color: #333;
+}
+.refund-flow>li>span{
+    color: #999;
+}
+.refund-reason{
+    padding: .32rem;
+    overflow: hidden;
+    border-top: 1px solid #eee;
+}
+.refund-reason>li{
+    font-size: .36rem;
+    color: #999999;
+    line-height: .48rem;
+
+}
+.refunddetail{
+    background: #f7f7f7;
+}
+.wrp{
+    padding: 0 .32rem ;
+    overflow: hidden;
+    margin-bottom: .2rem;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+}
+.wrp>h2{
+     padding: 0 .32rem;
+    font-size: .4rem;
+    color: #333;
+    line-height: .92rem;
+    height: .92rem;
+    border-bottom: 1px solid #eee
+}
+.wrp>h2>span{
+    float: right;
+    color: #ec1019;
+
+}
+.all-order{
+    overflow: hidden;
+}
+.all-order>li{
+    box-sizing: border-box;
+    background: #fff;
+    font-size: .4rem;
+    color: #333;
+   
+}
+.all-order>li>h3{
+    height: .946667rem;
+    line-height: .946667rem;
+     padding: 0 .28rem;
+     border-bottom: 1px solid #f4f4f4;
+}
+.all-order>li>h3>span{
+    color: #ec1019;
+    float: right;
+}
+.good-wrp{
+    overflow: hidden;
+    padding:  .28rem;
+    box-sizing: border-box;
+    border-top: 1px solid #f4f4f4;
+}
+.good-wrp:nth-of-type(1){
+    border-top: 0
+}
+.good-wrp>img{
+    width: 1.36rem;
+    height: 1.36rem;
+    float: left;
+    margin-right: .2rem;
+}
+.good-wrp>p>span{
+    float: right;
+}
+.refund>li>.good-wrp>p:nth-of-type(1) >span{
+    color: #999;
+}
+.refund>li>.good-wrp>p:nth-of-type(2) >span{
+    color: #ec1019;
+}
+.good-wrp>p:nth-of-type(1) >span{
+    color: #ec1019;
+}
+.good-wrp>p:nth-of-type(2){
+    color: #999;
+    margin-top: .56rem
+}
+</style>

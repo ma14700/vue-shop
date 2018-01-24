@@ -1,0 +1,595 @@
+<template>
+  <div class="refunddetail">
+      <!-- 退换货页面 -->
+      <!-- 两条线，一个退换货，一个退货退款，根据后台返回的returnGoodsType 0为退换货 1为退货退款 -->
+      <div class="wrp" v-if="orderInfo.orderReturnGoods">
+        <h2 v-if="orderInfo.orderReturnGoods.returnGoodsType==1">退款金额<span>¥{{(orderInfo.orderTotalAmount-orderInfo.couponAmount) | two}}</span></h2>
+        <h2 v-if="orderInfo.orderReturnGoods.returnGoodsType==0">退换货</h2>
+            <ul class="refund-flow">
+                <li>
+                    <i :class="[(orderInfo.orderStatus >= 201 )?'red-bg':'']"></i>
+                    <b :class="[(orderInfo.orderStatus >= 201 )?'red-bg':'']"></b>
+                    <p>等待卖家确认</p>
+                    <span v-if="orderPress.length>3">{{orderPress[3].happendTime | date}} </span>
+                </li>
+                
+                <li v-if="orderInfo.orderStatus == 202">
+                    <i :class="[(orderInfo.orderStatus == 202 )?'red-bg':'']"></i>
+                    <b></b>
+                    <p >卖家拒绝退换</p>
+                    <span v-if="orderPress.length>4">{{orderPress[4].happendTime | date}} </span>
+                </li>
+                <li v-if="orderInfo.orderStatus >= 201 && orderInfo.orderStatus != 202">
+                    <i :class="[(orderInfo.orderStatus >= 203 )?'red-bg':'']"></i>
+                    <b :class="[(orderInfo.orderStatus >= 203 )?'red-bg':'']"></b>
+                    <p >卖家同意退换</p>
+                    <span v-if="orderPress.length>4"> {{orderPress[4].happendTime | date}}</span>
+                </li>
+                <li>
+                    <i :class="[(orderInfo.orderStatus >= 205 )?'red-bg':'']"></i>
+                    <b :class="[(orderInfo.orderStatus >= 205 )?'red-bg':'']"></b>
+                    <p>卖家收到退货</p>
+                    <span v-if="orderPress.length>6 && orderInfo.orderStatus >= 205"> {{orderPress[7].happendTime | date}}</span>
+                </li>
+                <li v-if="orderInfo.orderReturnGoods.returnGoodsType==1">
+                    <i :class="[(orderInfo.orderStatus >= 207 )?'red-bg':'']"></i>
+                    <b :class="[(orderInfo.orderStatus >= 207 )?'red-bg':'']"></b>
+                    <p >卖家退款成功</p>
+                    <span v-if="orderPress.length>8 && orderInfo.orderStatus >= 207">{{orderPress[9].happendTime | date}}</span>
+                </li>
+                <li v-if="orderInfo.orderReturnGoods.returnGoodsType==0">
+                    <i ></i>
+                    <b ></b>
+                    <p>卖家重新发货</p>
+                    <span></span>
+                </li>
+            </ul>
+
+
+      </div>
+      <div class="wrp">
+        <ul class="all-order refund" v-if="orderInfo.orderItem">
+            <li>
+                <h3><img :src="orderInfo.supplierLogo" alt="">{{orderInfo.supplierName}}</h3>
+                <div class="good-wrp" v-for="n in orderInfo.orderItem">
+                    <img :src="n.itemPicUrl" alt="">
+                    <p><em>{{n.itemName}}</em><span>×{{n.itemCount}}</span></p>
+                    <p><em>{{proData(n.itemSku)}}</em><span>¥{{n.itemUnitPrice | two}}</span></p>
+                </div>
+            </li>
+        </ul>
+        <ul class="refund-reason" v-if="orderInfo.orderReturnGoods != null">
+            <li>退款编号：{{orderInfo.orderReturnGoods.returnGoodsNo}}</li>
+            <li>商品状态：{{orderInfo.orderReturnGoods.goodsStatus}}</li>
+            <li>退款原因：<span>{{orderInfo.orderReturnGoods.reason}}</span></li>
+            <li>退款说明：<span>{{orderInfo.orderReturnGoods.remark}}</span> </li>
+            <!-- <li>申请件数：{{totalNum}}</li> -->
+            <li>退款凭证：
+
+                <div class="img-wrp" v-if="orderInfo.orderReturnGoods.voucherImgs">
+                    <img :src="i" alt="" v-for="i in voucherImgs" :key="i">
+                </div>
+                <span v-else >没有上传凭证</span>
+            </li>
+        </ul>
+        <ul class="refund-reason" v-if="orderInfo.orderStatus>=202">
+            <li>卖家回复：<span>{{orderInfo.orderReturnGoods.treatmentRemark}}</span></li>
+            <li>处理时间：{{orderInfo.orderReturnGoods.treatmentTime | date}}</li>
+            <li v-if="orderInfo.orderStatus>=203">退货地址：<span>{{orderInfo.orderReturnGoods.rejectedPostAddress}}</span></li>
+            <li v-if="orderInfo.orderStatus>=203">收&ensp;货&ensp;人：{{orderInfo.orderReturnGoods.rejectedPostUserName}}</li>
+            <li v-if="orderInfo.orderStatus>=203">联系电话：{{orderInfo.orderReturnGoods.rejectedPostUserPhone}}</li>
+        </ul>
+        
+      </div>
+      <div class="trans" v-if="orderInfo.orderStatus>=204" >
+            <h2>退货物流信息<span v-if="orderInfo.orderStatus==204" @click="setReturnGoodsExpress('more')">修改录入信息</span></h2>
+            <div v-if="transList.length>0" @click="watchtrans()">
+                <div class="green-text" >{{transList[0].context}}</div>
+                <div >{{transList[0].time}}</div>
+                <div class="allow"><i class="iconfont icon-right"></i></div>
+            </div>
+            <div  class="green-text" v-else>
+                信息录入错误，请修改录入信息
+            </div>
+            
+        </div>
+        <div style="height:1.6rem"></div>
+        <div class="order-status" v-if="orderInfo.orderStatus==203 ">
+            <span class="red" @click="setReturnGoodsExpress('first')">录入退货信息</span>
+            
+        </div>
+        
+        <mt-popup v-model="returnGoodsExpress"  v-if="orderInfo.orderStatus==203" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+                <div class="returnGoodsExpress">
+                  <h2>录入退货信息</h2>
+                  <p><span>快递公司：</span><input type="text" id="expressComName" v-model.trim="rejectedComName"></p>
+                  <p><span>快递单号：</span><input type="text" id="expressPostNo" v-model.trim="rejectedPostNo"></p>
+                  <p><i class="iconfont icon-tishi"></i>请核对您的快递单号以及快递公司</p>
+                  <div @click="confirmInfo('first')">确定</div>
+                </div>
+        </mt-popup>
+        <mt-popup v-model="reviseReturnGoodsExpress" v-if="orderInfo.orderStatus==204" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+                <div class="returnGoodsExpress" v-if="orderInfo.orderDelivery">
+                  <h2>修改退货信息</h2>
+                  <p><span>快递公司：</span><input type="text" id="expressComName" v-model.trim="rejectedComName" ></p>
+                  <p><span>快递单号：</span><input type="text" id="expressPostNo" v-model.trim="rejectedPostNo" ></p>
+                  <p><i class="iconfont icon-tishi"></i>请核对您的快递单号以及快递公司</p>
+                  <div @click="confirmInfo('more')" >确定</div>
+                </div>
+        </mt-popup>
+        
+
+  </div>
+</template>
+<script>
+import { Toast } from "mint-ui";
+import { Popup } from "mint-ui";
+import { MessageBox } from "mint-ui";
+export default {
+  data() {
+    return {
+      orderInfo: [],
+      voucherImgs: [],
+      orderRefund: [],
+      orderPress: [],
+      forPress: [],
+      flag1: true,
+      flag2: true,
+      flag3: true,
+      flag4: true,
+      returnGoodsExpress: false,
+      reviseReturnGoodsExpress: false,
+      rejectedComName: null,
+      rejectedPostNo: null,
+      transList: []
+    };
+  },
+  created() {
+    this.getOrder();
+  },
+  computed: {
+    totalNum: function() {
+      let orderItem = this.orderInfo.orderItem;
+      let num = 0;
+      if (orderItem) {
+        orderItem.map(function(i) {
+          num += i.itemCount;
+        });
+      }
+      return num;
+    }
+  },
+  methods: {
+    async getOrder() {
+      this.$http
+        .post("/api/neworder/detail/" + this.$route.query.id)
+        .then(res => {
+          this.orderInfo = res.data.data;
+          this.voucherImgs = (res.data.data.orderReturnGoods.voucherImgs || '').split(",");
+          this.orderRefund = res.data.data.orderRefund;
+          // 获得进度
+          this.orderPress = res.data.data.orderStatusTimeline;
+          if (this.orderInfo.orderDelivery.rejectedPostNo != null) {
+            this.rejectedComName = this.orderInfo.orderDelivery.rejectedExpressName;
+            this.rejectedPostNo = this.orderInfo.orderDelivery.rejectedPostNo;
+
+            this.$http
+              .post("/api/express", {
+                ComCode: "auto",
+                PostNo: this.orderInfo.orderDelivery.rejectedPostNo
+              })
+              .then(res => {
+                this.transList = res.data.data;
+              });
+          }
+        });
+    },
+    proData(pro) {
+      pro = pro.split(";");
+      let data = [];
+      for (let i = 0; i < pro.length; i++) {
+        data.push(pro[i].split(":")[1]);
+      }
+      return data.join(";");
+    },
+    setReturnGoodsExpress(model) {
+      if (model == "first") {
+        this.returnGoodsExpress = true;
+      } else {
+        this.reviseReturnGoodsExpress = true;
+      }
+    },
+    async watchtrans() {
+      this.$router.push({
+        path: "/tranparcel",
+        //   query:{id:this.$route.query.id}
+        query: {
+          id: this.$route.query.id,
+          postNo: this.orderInfo.orderDelivery.rejectedPostNo,
+          postName: this.orderInfo.orderDelivery.rejectedExpressName,
+          imgUrl: this.orderInfo.orderItem[0].itemPicUrl,
+          transList: this.transList
+        }
+      });
+    },
+    async confirmInfo(model) {
+      if (!!!this.rejectedComName) {
+        Toast({
+          message: "请输入快递公司",
+          position: "bottom",
+          duration: 1.5e3
+        });
+        return;
+      }
+      if (!!!this.rejectedPostNo) {
+        Toast({
+          message: "请输入快递单号",
+          position: "bottom",
+          duration: 1.5e3
+        });
+        return;
+      }
+      var request = null;
+        if (model == "first") {
+          request = this.$http.post;
+        } else {
+          request = this.$http.put;
+        }
+        request("/api/neworder/rejected/express/" + this.$route.query.id, {
+          OrderId: this.$route.query.id,
+          RejectedExpressName: this.rejectedComName,
+          RejectedPostNo: this.rejectedPostNo
+        }).then(res => {
+          let _this = this;
+          if (res.data.success) {
+            MessageBox({
+              title: "录入信息",
+              message: res.data.message,
+              showCancelButton: false,
+              confirmButtonText: "完成",
+              closeOnClickModal: false
+            }).then(action => {
+              if (action == "confirm") {
+                window.location.reload();
+                if (_this.orderInfo.orderDelivery.rejectedPostNo == null) {
+                  _this.$http
+                    .post("/api/express", {
+                      ComCode: "auto",
+                      PostNo: _this.postNo
+                    })
+                    .then(res => {
+                      _this.transList = res.data.data;
+                    });
+                }
+              }
+            });
+          } else {
+            MessageBox({
+              title: "录入信息失败",
+              message: "请核对快递公司以及快递单号",
+              showCancelButton: false,
+              confirmButtonText: "完成",
+              closeOnClickModal: false
+            }).then(action => {});
+          }
+        });
+    }
+  },
+  filters: {
+    date(value) {
+      if (!value) {
+        return "";
+      }
+      let va = value.replace(/T/g, " ").substring(0, 19);
+      return va;
+    },
+    two: function(value) {
+      if (!value) {
+        return "";
+      }
+      return value.toFixed(2);
+    }
+  }
+};
+</script>
+<style>
+.mint-msgbox-confirm {
+  color: #ec1019;
+  font-size: 0.4rem;
+}
+.mint-msgbox-cancel {
+  font-size: 0.4rem;
+}
+.mint-toast {
+  z-index: 2010 !important;
+}
+</style>
+
+<style scoped>
+.trans {
+  box-sizing: border-box;
+  padding: 0.2rem 0.64rem;
+  background: #fff;
+  border-bottom: 1px solid #f4f4f4;
+  font-size: 0.32rem;
+  position: relative;
+  line-height: 0.6rem;
+}
+.trans .allow {
+  position: absolute;
+  top: 1.2rem;
+  right: 0.32rem;
+}
+.trans > .green-text {
+  color: #60cc83;
+  width: 85%;
+}
+.trans > h2 > span {
+  float: right;
+  color: #ec1019;
+}
+.returnGoodsExpress {
+  width: 10rem;
+  box-sizing: border-box;
+  padding: 0.4rem 0.32rem 1.5rem;
+  position: relative;
+  font-size: 0.4rem;
+}
+.returnGoodsExpress h2 {
+  margin-top: 0.2rem;
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+.returnGoodsExpress p {
+  line-height: 1.4rem;
+  font-size: 0.36rem;
+  margin: 0.2rem 0;
+}
+.returnGoodsExpress > p:nth-of-type(3) {
+  font-size: 0.32rem;
+  line-height: 0.54rem;
+  color: #999;
+}
+.returnGoodsExpress > p:nth-of-type(3) > i {
+  margin-right: 2px;
+  position: relative;
+  top: 2px;
+}
+.returnGoodsExpress > p > input {
+  background: #eee;
+  border: none;
+  border-radius: 3px;
+  height: 1.2rem;
+  width: 7.15rem;
+  padding: 0 0.2rem;
+}
+.returnGoodsExpress div {
+  line-height: 1.2rem;
+  background-color: #ec1019;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  color: #fff;
+  text-align: center;
+  font-size: 0.4rem;
+}
+.order-status {
+  position: fixed;
+  width: 10rem;
+  bottom: 0;
+  background: #fff;
+  text-align: right;
+  padding: 0.32rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.order-status > span {
+  display: inline-block;
+  height: 0.68rem;
+  border: 1px solid #acacac;
+  border-radius: 0.28rem;
+  padding: 0 0.4rem;
+  color: #acacac;
+  line-height: 0.68rem;
+  margin-left: 0.24rem;
+}
+.order-status > span.red {
+  border-color: #ec1019;
+  color: #ec1019;
+}
+.refund-flow {
+  overflow: hidden;
+  padding: 0.32rem;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.refund-flow > li {
+  width: 25%;
+  float: left;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 12px;
+  line-height: 0.48rem;
+  color: #333;
+  position: relative;
+  margin-top: 0.72rem;
+}
+.refund-flow > li.width {
+  width: 50%;
+}
+.refund-flow > li > span {
+  color: #999;
+}
+.refund-flow > li > i {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  top: -0.5rem;
+  display: block;
+  left: 50%;
+  margin-left: -5px;
+  background: #999;
+  border-radius: 5px;
+  z-index: 20;
+}
+.refund-flow > li > b {
+  width: 2rem;
+  height: 3px;
+  position: absolute;
+  top: -0.4rem;
+  display: block;
+  background: #999;
+  left: 50%;
+  z-index: 10;
+  margin-left: 5px;
+}
+.refund-flow .red-bg {
+  background: #ec1019;
+}
+.refund-flow > li:last-child > b {
+  display: none;
+}
+.refund-reason {
+  padding: 0.32rem;
+  overflow: hidden;
+  border-top: 1px solid #eee;
+}
+.refund-reason > li {
+  font-size: 0.36rem;
+  color: #999999;
+  line-height: 0.48rem;
+  overflow: hidden;
+}
+.refund-reason > li > span {
+  display: inline-block;
+  float: right;
+  word-wrap: break-word;
+  width: 6.9rem;
+}
+.refund-reason > li > .img-wrp {
+  margin-left: 1.6rem;
+  overflow: hidden;
+  margin-top: -0.48rem;
+}
+.refund-reason > li > .img-wrp > img {
+  width: 1.44rem;
+  height: 1.44rem;
+  float: left;
+  margin-left: 0.2rem;
+  margin-top: 0.2rem;
+}
+.refunddetail {
+  background: #f7f7f7;
+}
+.wrp {
+  padding: 0 0.32rem;
+  overflow: hidden;
+  margin-bottom: 0.2rem;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  box-sizing: border-box;
+  width: 10rem;
+}
+.wrp > h2 {
+  padding: 0 0.32rem;
+  font-size: 0.4rem;
+  color: #333;
+  line-height: 0.92rem;
+  height: 0.92rem;
+  border-bottom: 1px solid #eee;
+}
+.wrp > h2 > span {
+  float: right;
+  color: #ec1019;
+}
+.all-order {
+  overflow: hidden;
+}
+.all-order > li {
+  box-sizing: border-box;
+  background: #fff;
+  font-size: 0.4rem;
+  color: #333;
+}
+.all-order > li > h3 {
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0.24rem 0.28rem;
+  border-bottom: 1px solid #f4f4f4;
+  line-height: 0.68rem;
+}
+.all-order > li > h3 > img {
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #dedede;
+  float: left;
+  margin-right: 0.32rem;
+  display: inline-block;
+}
+.all-order > li > h3 > span {
+  color: #ec1019;
+  float: right;
+}
+.good-wrp {
+  overflow: hidden;
+  padding: 0.28rem;
+  box-sizing: border-box;
+  border-top: 1px solid #f4f4f4;
+}
+.good-wrp:nth-of-type(1) {
+  border-top: 0;
+}
+.good-wrp > img {
+  width: 1.728rem;
+  height: 1.44rem;
+  float: left;
+  margin-right: 0.2rem;
+}
+.good-wrp > p > span {
+  float: right;
+}
+.good-wrp > p > em {
+  max-width: 5rem;
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.refund > li > .good-wrp > p:nth-of-type(1) > span {
+  color: #999;
+}
+.refund > li > .good-wrp > p:nth-of-type(2) > span {
+  color: #ec1019;
+}
+.good-wrp > p:nth-of-type(1) > span {
+  color: #ec1019;
+}
+.good-wrp > p:nth-of-type(2) {
+  color: #999;
+  margin-top: 0.36rem;
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-button {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: #fff;
+}
+</style>

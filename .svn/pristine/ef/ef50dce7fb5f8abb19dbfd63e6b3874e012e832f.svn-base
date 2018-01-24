@@ -1,0 +1,79 @@
+<template>
+  <div class="footGuide">
+    <div class="footGuide-dot"  @click = "gotoAddress('/home')" >
+      <img  v-bind:src="$route.path.indexOf('home') !== -1?foothome1:foothome" >
+        <span v-bind:class="[$route.path.indexOf('home') !== -1?'footcolor':'footcolor1']">首页</span>
+    </div>
+    <div class="footGuide-dot" @click = "gotoAddress('/classify')">
+      <img  v-bind:src="$route.path.indexOf('classify') !== -1?footclassify:footclassify1" >
+        <span v-bind:class="[$route.path.indexOf('classify') !== -1?'footcolor':'footcolor1']">分类</span>
+    </div>
+
+    <div class="footGuide-dot" @click = "gotoAddress('/shopcart')">
+      <img v-bind:src="$route.path.indexOf('shopcart') !== -1?footshopcart:footshopcart1" >
+        <span v-bind:class="[$route.path.indexOf('shopcart') !== -1?'footcolor':'footcolor1']">购物车</span>
+    </div>
+    <div class="footGuide-dot" @click = "gotoAddress('/center')">
+      <img  v-bind:src="$route.path.indexOf('center') !== -1?footcenter:footcenter1">
+        <span v-bind:class="[$route.path.indexOf('center') !== -1?'footcolor':'footcolor1']">我的</span>
+    </div>
+  </div>
+</template>
+
+<script>
+import { Tabbar, TabItem } from 'mint-ui';
+export default {
+    data(){
+        return {
+          foothome:require('../../assets/icon/icon-shouye.png'),
+          foothome1:require('../../assets/icon/icon-shouye1.png'),
+          footclassify:require('../../assets/icon/icon-fenlei1.png'),
+          footclassify1:require('../../assets/icon/icon-fenlei.png'),
+          footshopcart:require('../../assets/icon/icon-cart1.png'),
+          footshopcart1:require('../../assets/icon/icon-cart.png'),
+          footcenter:require('../../assets/icon/icon-mycenter1.png'),
+          footcenter1:require('../../assets/icon/icon-mycenter.png'),
+
+        }
+    },
+    methods:{
+      gotoAddress(path){
+        		this.$router.push(path)
+      }
+    }
+}
+</script>
+<style>
+.footcolor{
+  color: #ec1019;
+}
+.footcolor1{
+  color: #333333;
+}
+.footGuide{
+  width: 10rem;
+  height: 1.466667rem;
+  display: flex;
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  background: #fff;
+  border-top: 1px solid #dddddd;
+}
+.footGuide-dot{
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  color: #c2b6ca;
+}
+.footGuide-dot img{
+  width: .533333rem;
+  height: .533333rem;
+  display: block;
+  margin: 0 auto;
+  margin-top: .28rem;
+  margin-bottom: 6px;
+}
+</style>
+
+

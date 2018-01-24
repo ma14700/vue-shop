@@ -1,0 +1,182 @@
+<template>
+    <div class="submitorder">
+        <div class="order-address">
+            <h2>收货人：我叫邮储 <span>0371-666666</span></h2>
+            <span>河南省郑州市郑东新区建业总部港</span>
+            <p></p>
+            <i class="iconfont icon-right"></i>
+        </div>
+        <div class="order-good" v-for="n in 2" :key="n">
+            <h2>
+                <img src="../../assets/home/brand.png" alt="">
+                周生生旗舰店
+            </h2>
+            <ul>
+                <li v-for="n in 2" :key="n">
+                    <img src="../../assets/home/yanshi.png" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">零兑金-好运常来好运常来好运常来<span>¥1080</span></p>
+                        <p class="order-gdinfo">材质：金银<span>×1</span></p>
+                    </div>
+                    
+                </li>
+                <p>共1件商品&nbsp;&nbsp;&nbsp;&nbsp;合计：<span>¥1080</span></p>
+            </ul>
+        </div>
+        <div class="bot-confirm">
+            <p>总计：<span>¥1018</span></p>
+            <span>确认</span>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    data() {
+        return {
+
+        }
+    },
+   
+   
+}
+</script>
+
+
+<style scoped>
+.submitorder{
+    background: #f7f7f7;
+}
+.order-address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+}
+.order-address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.order-address >h2>span{
+    margin-left: .72rem;
+}
+.order-address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.order-address > p{
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+    
+}
+.order-address >i{
+    position: absolute;
+    right: .32rem;
+    top: .54rem;
+    font-weight: bold;
+    color: #999
+
+}
+.order-good{
+    overflow: hidden;
+    padding: 0 .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+}
+.order-good>h2{
+    font-size: .4rem;
+    padding:.24rem 0 ;
+    line-height: .68rem
+}
+.order-good>h2>img{
+    width: .64rem;
+    height: .64rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1px solid #dedede;
+    float: left;
+    margin-right: .32rem;
+}
+.order-good>ul>li:first-child{
+    border-top: 1px solid #dedede;
+}
+.order-good>ul>li{
+    border-bottom: 1px solid #dedede;
+    padding: .24rem 0;
+    overflow: hidden;
+}
+.order-good>ul>li>img{
+    width: 1.08rem;
+    height: 1.08rem;
+    float: left;
+}
+.order-good>ul>li .gd-wrp{
+    float: left;
+    font-size: .36rem;
+    width: 8.08rem;
+    margin-left: .2rem;
+}
+.gd-wrp .order-gdname{
+    color: #333;
+}
+.gd-wrp .order-gdname>span{
+    float: right;
+    color: #ec1019
+}
+.gd-wrp .order-gdinfo{
+    color: #999;
+    line-height: .6rem;
+}
+.gd-wrp .order-gdinfo>span{
+    float: right;
+    color: #333;
+}
+.order-good>ul>p{
+    font-size: .4rem;
+    text-align: right;
+    height: .946667rem;
+    line-height: .946667rem;
+}
+.order-good>ul>p>span{
+    color: #ec1019;
+}
+.bot-confirm{
+    height: 1.2rem;
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    width: 10rem;
+    z-index: 100;
+    left: 0;
+    box-sizing: border-box;
+    box-shadow: 0 0 1px #dedede;
+}
+.bot-confirm>span{
+    width: 2.52rem;
+    height: 1.2rem;
+    color: #fff;
+    background: #ec1019;
+    font-size: .48rem;
+    display: block;
+    float: right;
+    text-align: center;
+    line-height: 1.2rem;
+}
+.bot-confirm>p{
+    color: #ec1019;
+    font-size: .4rem;
+    display: inline;
+    line-height: 1.2rem;
+    padding-left: .32rem;
+}
+.bot-confirm>p>span{
+    font-size: .48rem;
+}
+</style>

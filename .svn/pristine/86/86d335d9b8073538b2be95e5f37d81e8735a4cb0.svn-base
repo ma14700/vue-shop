@@ -1,0 +1,471 @@
+<template>
+    <div class="goodslist">
+        <div class="fixed">
+            <div class="wraper-input">
+                <b class="iconfont icon-fanhui"></b>
+                <input type="text" placeholder="请输入分类查询信息">
+                <i class="iconfont icon-sousuo2"></i>
+                <span>取消</span>
+            </div>
+            <mt-navbar v-model="selected">
+                    <mt-tab-item id="1"><div class="wrp">综合</div></mt-tab-item>
+                    <mt-tab-item id="2"><div class="wrp">销量</div></mt-tab-item>
+                    <mt-tab-item id="3">
+                        <div @click="arrowSelected" class="wrp">
+                            <span>价格</span>
+                        <span class="arrow">
+                            <i class="iconfont icon-icon-up top" :class="[arrowshow?'':'arrowNotselected']"></i>
+                            <i class="iconfont icon-up bottom" :class="[arrowshow?'arrowNotselected':'']"></i>
+                        </span>
+                        </div>
+                    </mt-tab-item>
+                    <div class="others" @click="changeIcon"><i class="iconfont " :class="isLump?'icon-list':'icon-liebiao1gai'"></i></div>
+                    <div class="others" @click="filter">
+                        筛选
+                    </div>
+                </mt-navbar>
+        </div>
+        <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="right">
+            <div class="filter-wraper">
+                <p class="factor">品牌<i class="iconfont icon-xiangshangjiantouarrowup"></i></p>
+                <ul class="ul-image"> 
+                    <li v-for="n in 8" :key="n"><img src="../../assets/home/brand.png" alt=""></li>
+                </ul>
+            </div>
+            <div class="filter-wraper">
+                <p class="factor">商品类型</p>
+                <ul class="ul-text">
+                    <li class="isSelected">邮储金</li>
+                    <li>礼品系列</li>
+                    <li>金银纪念币</li>
+                </ul>
+            </div>
+            <div class="filter-wraper">
+                <p class="factor">材质</p>
+                <ul class="ul-text">
+                    <li class="isSelected">金</li>
+                    <li>银</li>
+                    <li>金+银</li>
+                </ul>
+            </div>
+            <div class="filter-wraper">
+                <p class="factor"><span>价格区间(元) </span> <input type="text" placeholder="最低价"> -- <input type="text" placeholder="最高价"></p>
+                
+            </div>
+            <div class="bottom-btn">
+                <span>确认</span>
+                <span>重置</span>
+            </div>
+        </mt-popup>
+        <!-- tab-container -->
+        <mt-tab-container v-model="selected">
+            <mt-tab-container-item id="1">
+                <div v-for="(item,index) in goodsList" :key="index" :class="isLump?'lump-wraper':'item-wraper'" @click="goDetail(item.id)">
+                    <img :src="item.goodFirstPicUrl" alt="">
+                    <div class="text">
+                        <p class="good-name">{{item.goodName |dot}}</p>
+                        <p class="good-price"><i>¥{{item.goodSalePrice | two}}</i><span>重量：10K</span></p>
+                    </div>     
+                </div>
+            </mt-tab-container-item>
+            <mt-tab-container-item id="2">
+                <div v-for="(item,index) in countList" :key="index" :class="isLump?'lump-wraper':'item-wraper'" @click="goDetail">
+                    <img :src="item.goodFirstPicUrl" alt="">
+                    <div class="text">
+                        <p class="good-name">{{item.goodName |dot}}</p>
+                        <p class="good-price"><i>¥{{item.goodSalePrice}}</i><span>重量：10K</span></p>
+                    </div>     
+                </div>
+            </mt-tab-container-item>
+            <mt-tab-container-item id="3">
+                 <div v-for="(item,index) in priceList" :key="index" :class="isLump?'lump-wraper':'item-wraper'" @click="goDetail">
+                    <img :src="item.goodFirstPicUrl" alt="">
+                    <div class="text">
+                        <p class="good-name">{{item.goodName |dot}}</p>
+                        <p class="good-price"><i>¥{{item.goodSalePrice}}</i><span>重量：10K</span></p>
+                    </div>     
+                </div>
+            </mt-tab-container-item>
+        </mt-tab-container>
+    </div>
+</template>
+
+<script>
+// import footGuide from '../../components/footer/footGuide'
+import { Navbar, TabItem } from "mint-ui";
+import { Popup } from 'mint-ui';
+export default {
+  data() {
+    return {
+        selected:'1',
+        arrowshow:true,
+        isLump:true,
+        popupVisible:false,
+        goodsList:[],
+        searchCondition:{
+            catId: this.$route.query.id,
+            row:10,
+            page: 1,
+            orderBy: 5,
+        }
+    };
+  },
+  computed:{
+      // 根据销量进行排序
+        countList: function() {
+            let arr = this.goodsList;
+            let arr2 = [];
+            for (let i = 0; i < arr.length; i++) {
+                arr2[i] = arr[i]
+            }
+            return arr2.sort(function(a, b) {
+                return b.goodVirtualSales - a.goodVirtualSales;//降序
+            })
+        },
+    //根据价格进行排序
+        priceList: function() {
+            let arr = this.goodsList;
+            let arr2 = [];
+            let arr3 = [];
+            for (let i = 0; i < arr.length; i++) {
+                arr2[i] = arr[i];
+                arr3[i] = arr[i];
+            }
+            if (this.arrowshow) {
+                return arr3.sort(function(a, b) {
+                    return a.goodSalePrice - b.goodSalePrice;//升序，价格由低到高
+                })
+            } else {
+                return arr2.sort(function(a, b) {
+                    return b.goodSalePrice - a.goodSalePrice;//降序    价格由高到低   s
+                })
+            }
+        }
+  },
+  created(){
+      this.getGoodList();
+  },
+  methods:{
+      getGoodList(){
+          this.$http.post('/api/good/goodlist',this.searchCondition).then(res=>{
+              this.goodsList= res.data.data;
+              console.log(res.data.data)
+          })
+      },
+      arrowSelected(){
+          this.arrowshow = !this.arrowshow;
+      },
+      changeIcon(){
+          this.isLump = !this.isLump;
+      },
+      filter(){
+          this.popupVisible = true;
+      },
+      goDetail(id){
+          this.$router.push({path:'/goodsdetail',query:{id}})
+      },
+      
+
+  },
+  filters:{
+    dot: function(value) {
+        if (!value) {
+            return value
+        } else {
+            if (value.length > 9) {
+                return value.slice(0,9) + '...'
+            } else {
+                    return value
+            }
+        }
+    },
+    two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+    },
+  }
+};
+</script>
+
+
+<style scoped>
+.goodslist{
+    background: #f7f7f7;
+}
+.fixed{
+    position: fixed;
+    top: 0;
+    z-index: 100;
+    width: 10rem;
+    
+}
+.wraper-input {
+  position: relative;
+  box-sizing: border-box;
+  height: 1.2rem;
+  padding: 0.2rem 0.32rem;
+  background: red;
+}
+.wraper-input > input {
+  height: 0.773333rem;
+  background: #f7f7f7;
+  border: none;
+  width: 7.826667rem;
+  box-sizing: border-box;
+  padding: 0 0.36rem;
+  border-radius: 10px;
+}
+.wraper-input > b {
+  font-size: 0.493333rem;
+  color: #a6a6a6;
+  font-weight: bold;
+}
+.wraper-input > span {
+  float: right;
+  font-size: 0.36rem;
+  line-height: 0.8rem;
+}
+.wraper-input > i {
+  font-size: 0.493333rem;
+  color: #a6a6a6;
+  position: absolute;
+  right: 1.75rem;
+  top: 0.35rem;
+}
+.mint-navbar{
+    height: 1rem;
+    display: block;
+    box-sizing: border-box;
+}
+.mint-navbar .mint-tab-item{
+    float: left;
+    width: 23%;
+    text-align: center;
+    padding: .29rem 0;
+    font-size: .4rem;
+    border-bottom: 1px solid #e4e4e4; 
+}
+
+.mint-navbar .mint-tab-item.is-selected{
+    color: #ec1019;
+    margin-bottom: -2px;
+    border-bottom:2px solid #ec1019;
+    box-sizing: border-box;
+    
+}
+.mint-navbar .mint-tab-item{
+    color: #999999
+}
+.mint-navbar .others{
+    border-left: 1px solid #e4e4e4; 
+    width: 15.2%;
+    float: left;
+    text-align: center;
+    border-bottom: 1px solid #e4e4e4; 
+    height:1rem ;
+    box-sizing: border-box;
+    font-size: .36rem;
+    line-height: 1.1rem ;
+    color: #999
+}
+.mint-navbar .others>i{
+    line-height: 1rem ;
+}
+.mint-navbar .mint-tab-item-label .wrp{
+    position: relative;
+    font-size: .4rem;
+}
+.mint-navbar .mint-tab-item-label .arrow{
+    position: absolute;
+    top: -.2rem;
+    width: .4rem;
+}
+.mint-navbar .mint-tab-item-label .arrow .arrowNotselected{
+    color: #999
+}
+.mint-navbar .mint-tab-item-label .arrow .arrowselected {
+    color: #ec1019;
+}
+
+.mint-navbar .mint-tab-item-label .arrow>i{
+    display: inline-block;
+    font-size: .32rem;
+    position: relative;
+    right: -.1rem;
+}
+.mint-navbar .mint-tab-item-label .arrow .top{
+    top: .1rem
+}
+.mint-navbar .mint-tab-item-label .arrow .bottom{
+    bottom: .1rem
+}
+.mint-tab-container{
+    margin-top: 2.52rem;
+}
+.lump-wraper{
+    width: 4.9rem;
+    box-sizing: border-box;
+    float: left;
+}
+.lump-wraper:nth-child(even){
+    margin-left: .2rem;
+}
+.lump-wraper >img{
+    width: 4.9rem;
+    height: 4.893333rem;
+    box-sizing: border-box;
+    border: 1px solid #dcdcdc;
+
+}
+.lump-wraper .text{
+    padding: 0 .32rem;
+}
+.lump-wraper>p{
+    
+}
+.lump-wraper .good-name{
+    font-size: .4rem;
+    margin-top: .2rem;
+}
+.lump-wraper .good-price{
+  color: #ef151f;
+  font-size: .32rem;
+  margin: .2rem 0;
+  line-height: .5rem;
+}
+.lump-wraper .good-price>span{
+  color: #999999;
+  float: right;
+}
+.lump-wraper .good-price > i{
+  font-size: .45rem;
+}
+.item-wraper{
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.item-wraper>img{
+    width: 3.4rem;
+    height:2.64rem;
+    float: left;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee
+}
+.item-wraper .text{
+    float: left;
+    width: 6.6rem;
+    height:2.64rem;
+    background: #fff;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee;
+    padding: .4rem .32rem;
+    position: relative;
+}
+.item-wraper .good-name{
+    font-size: .4rem;
+}
+.item-wraper .good-price{
+    margin-top: 1rem;
+    color: #ef151f;
+    font-size: .32rem;
+    height: .5rem;
+    line-height: .5rem;
+}
+.item-wraper .good-price>span{
+  color: #999999;
+  float: right;
+}
+.item-wraper .good-price > i{
+  font-size: .45rem;
+}
+.mint-popup{
+    width: 9rem;
+    height: 100%;
+    background: #fff;
+}
+.filter-wraper{
+    box-sizing: border-box;
+    border-bottom: 1px solid #f4f4f4;
+    overflow: hidden;
+    padding:.28rem  .32rem ;
+}
+.factor{
+    padding-bottom: .28rem ;
+    font-size: .4rem;
+}
+.factor>i{
+    float: right;
+}
+.filter-wraper .ul-image> li{
+    width: 2rem;
+    height: 1.6rem;
+    box-sizing: border-box;
+    border: 1px solid #f4f4f4;
+    float: left;
+    margin-left: .4rem;
+    margin-bottom: .24rem;
+}
+.filter-wraper .ul-image> li >img{
+    width: 100%;
+    height: 100%;
+}
+.filter-wraper .ul-text>li{
+    float: left;
+    padding: 7px .36rem ;
+    
+    background: #f7f7f7;
+    font-size: .36rem;
+    margin-left: .4rem;
+    border-radius: 3px;
+    color: #797979;
+}
+.filter-wraper .ul-text>li:first-child{
+    margin-left: 0
+}
+.filter-wraper .ul-text .isSelected{
+    background: #ec1019;
+    color: #fff;
+}
+.filter-wraper:last-child .factor{
+    padding: 0;
+}
+.filter-wraper:last-child .factor>span{
+    margin-right: .28rem;
+}
+.factor>input{
+    width: 2rem;
+    height: .72rem;
+    background: #f7f7f7;
+    border: 0;
+    border-radius: 3px;
+    text-align: center;
+    color: #797979;
+    font-size: .36rem;
+}
+.factorsssss>span{
+    color: #797979;
+}
+.bottom-btn{
+    height: 1.2rem;
+    line-height: 1.2rem;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    font-size: .48rem;
+    color: #fff;
+    text-align: center;
+
+}
+.bottom-btn>span{
+    display: block;
+    width: 4.5rem;
+    box-sizing: border-box;
+    background: #ec1019;
+    float: left;
+}
+.bottom-btn>span:first-child{
+    border-right: 1px solid #fff;
+}
+</style>

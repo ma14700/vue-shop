@@ -1,0 +1,159 @@
+<template>
+  <div class="address">
+    <div class="order-address" v-for="(item,index) in addList">
+        <h2>{{item.receiverName}} <span>{{item.mobile}}</span></h2>
+        <span>{{item.siteRegion}}  {{item.address}}</span>
+        <p>
+            <span @click="querySet(item.id,index)"><i class="iconfont" :class="[item.isDefault?'icon-duigou':'icon-quan']"></i>设为默认</span>
+            <span  @click="del(item.id,index)"><i class="iconfont icon-shanchu"></i>删除</span>
+            <span @click="edit(item.id)"><i class="iconfont icon-bi"></i>编辑</span>
+        </p>
+        <div class="bot" v-if="item.isDefault"></div>
+    </div>
+    <footer></footer>
+    <div class="add-new" @click="addNew">
+        添加新地址
+    </div>
+
+  </div>
+</template>
+
+<script>
+import { setStore, getStore, removeStore } from "../../config/mUtils";
+import { MessageBox } from 'mint-ui';
+import { Toast } from 'mint-ui';
+export default {
+  data(){
+      return{
+        addList:[],
+        editAll:{}
+      }
+  },
+  created(){
+    this.getaddList();
+  },
+  methods:{
+    addNew(){
+        this.$router.push('/editaddress')
+    },
+    getaddList(){
+        this.$http.get('/api/revieve/address/list').then(res=>{
+            console.log(res.data.data);
+            this.addList = res.data.data;
+        })
+    },
+    del(id,index){
+        MessageBox.confirm('确定删除?').then(action => {
+            this.$http.delete('/api/revieve/address/'+id).then(res=>{
+              if(res.data.success){
+                this.addList.splice(index,1);
+                Toast('删除成功');
+              }else{
+                Toast(res.data.message);
+              }
+            })
+            console.log(id)
+        });
+    },
+    edit(id){
+        //let addeditList = JSON.stringify(this.addList[id]);
+        this.$router.push({path:'/editaddress',query:{id:id}});
+    },
+    querySet(id,index){
+        this.$http.put('/api/revieve/address/setDefault/'+id).then(res=>{
+            if(res.data.message == '设置成功！'){
+                 this.addList.forEach(function(good) {
+                    good.isDefault = false;
+                });
+                this.addList[index].isDefault = true;
+            }
+        });
+    }
+
+  }
+}
+</script>
+
+<style>
+/* messagebox */
+.mint-msgbox-confirm{
+    color: #ec1019;
+    font-size: .4rem;
+}
+.mint-msgbox-cancel{
+    font-size: .4rem;
+}
+footer{
+    height: 1.2rem;
+}
+.address{
+    background: #f7f7f7;
+}
+.order-address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+    border-top: 1px solid #eeeeee;
+    border-bottom: 1px solid #eeeeee;
+}
+.order-address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.order-address >h2>span{
+    margin-left: .72rem;
+}
+.order-address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.order-address .bot{
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+
+}
+.order-address>p{
+    height: .84rem;
+    line-height: .84rem;
+    box-sizing: border-box;
+    border-top: 1px solid #eeeeee;
+    margin-top: .2rem;
+    margin-left: .32rem;
+    margin-right: .32rem;
+    font-size: .36rem;
+    color: #999;
+}
+.order-address>p>i{
+    font-size: .48rem;
+    margin-right: .2rem;
+}
+.order-address>p>span{
+    float: right;
+    margin-left: .28rem;
+}
+.order-address>p>span:first-of-type{
+    float: none !important;
+}
+.order-address>p>span>i{
+    margin-right: 5px
+}
+.add-new{
+    height: 1.2rem;
+    font-size: .48rem;
+    color: #fff;
+    background: #ec1019;
+    text-align: center;
+    line-height: 1.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 10rem
+}
+</style>

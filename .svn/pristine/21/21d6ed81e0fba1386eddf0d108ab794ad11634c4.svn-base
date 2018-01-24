@@ -1,0 +1,366 @@
+<template>
+  <div class="refunddetail">
+      <div class="wrp">
+        <h2>退款金额<span>¥{{orderInfo.orderTotalAmount | two}}</span></h2>
+            <ul class="refund-flow" v-if="orderInfo.orderStatus == 103 || orderInfo.orderStatus == 202">
+                <li>
+                    <i class="red-bg"></i>
+                    <b class="red-bg"></b>
+                    <p>等待卖家确认</p>
+                    <span>2017-11-08 </span>
+                </li>
+                <li >
+                    <i :class="[(orderInfo.orderStatus == 103 || orderInfo.orderStatus == 202)?'red-bg':'']"></i>
+                    <b class="red-bg"></b>
+                    <p v-if="orderInfo.orderStatus == 103">卖家拒绝退款</p>
+                    <p v-else>卖家拒绝退货</p>
+                    <span>2017-11-08 </span>
+                </li>
+            </ul>
+            <ul class="refund-flow" v-else>
+                <li>
+                    <i class="red-bg"></i>
+                    <b class="red-bg"></b>
+                    <p>等待卖家确认</p>
+                    <span>2017-11-08 </span>
+                </li>
+                <li>
+                    <i :class="[(orderInfo.orderStatus == 102 || orderInfo.orderStatus == 203)?'red-bg':'']"></i>
+                    <b :class="[(orderInfo.orderStatus == 102 || orderInfo.orderStatus == 203)?'red-bg':'']"></b>
+                    <p v-if="orderInfo.orderStatus == 102">卖家同意退款</p>
+                    <p v-else>卖家同意退货</p>
+                    <span>2017-11-08 </span>
+                </li>
+                <!-- <li>
+                    <i></i>
+                    <b></b>
+                    <p>银行受理</p>
+                    <span>2017-11-08 </span>
+                </li>
+                <li>
+                    <i></i>
+                    <b></b>
+                    <p>退款成功</p>
+                    <span>2017-11-08 </span>
+                </li> -->
+            </ul>
+            
+
+      </div>
+      <div class="wrp">
+        <h2>退款信息</h2>
+        <ul class="all-order refund" v-if="orderInfo.orderItem">
+            <li>
+                <h3><img :src="orderInfo.supplierLogo" alt="">{{orderInfo.supplierName}}</h3>
+                <div class="good-wrp" v-for="n in orderInfo.orderItem">
+                    <img :src="n.itemPicUrl" alt="">
+                    <p><em>{{n.itemName}}</em><span>×{{n.itemCount}}</span></p>
+                    <p><em>{{proData(n.itemSku)}}</em><span>¥{{n.itemUnitPrice | two}}</span></p>
+                </div>
+            </li>
+        </ul>
+        <ul class="refund-reason" v-if="orderInfo.orderRefund != null">
+            <li>退款编号：{{orderRefund.refundNo}}</li>
+            <li v-for="i in orderInfo.orderStatusTimeline" v-if="i.afterChangeStatus==101" :key="i.id">申请时间：{{i.happendTime | date}}</li>
+            <li>退款原因：<span>{{orderRefund.reason}}</span></li>
+            <li>退款说明：<span>{{orderRefund.remark}}</span> </li>
+            <!-- <li>申请件数：{{totalNum}}</li> -->
+            <li>退款凭证：
+
+                <div class="img-wrp" v-if="voucherImgs">
+                    <img :src="i" alt="" v-for="i in voucherImgs" :key="i">
+                </div>
+                <span v-else >没有上传凭证</span>
+            </li>
+        </ul>
+        <ul class="refund-reason" v-if="orderInfo.orderReturnGoods != null">
+            <li>退款编号：{{orderInfo.orderReturnGoods.returnGoodsNo}}</li>
+            <li>商品状态：{{orderInfo.orderReturnGoods.goodsStatus}}</li>
+            <li>退款原因：<span>{{orderInfo.orderReturnGoods.reason}}</span></li>
+            <li>退款说明：<span>{{orderInfo.orderReturnGoods.remark}}</span> </li>
+            <!-- <li>申请件数：{{totalNum}}</li> -->
+            <li>退款凭证：
+
+                <div class="img-wrp" v-if="orderInfo.orderReturnGoods.voucherImgs">
+                    <img :src="i" alt="" v-for="i in voucherImgs" :key="i">
+                </div>
+                <span v-else >没有上传凭证</span>
+            </li>
+        </ul>
+
+        <ul class="refund-reason" v-if="orderInfo.orderStatus== 102 ||  orderInfo.orderStatus==103">
+            <li>卖家回复：{{orderRefund.treatmentRemark}}</li>
+            <li>处理时间：{{orderRefund.treatmentTime | date}}</li>
+        </ul>
+        <ul class="refund-reason" v-if="orderInfo.orderStatus==203 ||  orderInfo.orderStatus==202">
+            <li>卖家回复：<span>{{orderInfo.orderReturnGoods.treatmentRemark}}</span></li>
+            <li>处理时间：{{orderInfo.orderReturnGoods.treatmentTime | date}}</li>
+            <li v-if="orderInfo.orderStatus==203">退货地址：<span>{{orderInfo.orderReturnGoods.rejectedPostAddress}}</span></li>
+            <li v-if="orderInfo.orderStatus==203">收&ensp;货&ensp;人：{{orderInfo.orderReturnGoods.rejectedPostUserName}}</li>
+            <li v-if="orderInfo.orderStatus==203">联系电话：{{orderInfo.orderReturnGoods.rejectedPostUserPhone}}</li>
+        </ul>
+      </div>
+
+
+  </div>
+</template>
+<script>
+export default {
+    data(){
+        return{
+            orderInfo:[],
+            voucherImgs:[],
+            orderRefund:[],
+        }
+    },
+    created(){
+        this.getOrder();
+    },
+    computed:{
+        totalNum:function () {
+            let orderItem =this.orderInfo.orderItem;
+            let num = 0;
+            if(orderItem){
+                orderItem.map(function(i){
+                num += i.itemCount
+                });
+            }
+            return num
+        }
+    },
+    methods:{
+        getOrder(){
+            this.$http.post('/api/neworder/detail/' + this.$route.query.id).then(res => {
+                console.log(res.data.data);
+                this.orderInfo = res.data.data;
+                if(res.data.data.orderRefund !=null){
+                    this.voucherImgs= res.data.data.orderRefund.voucherImgs.split(",");
+                }else{
+                    this.voucherImgs= res.data.data.orderReturnGoods.voucherImgs.split(",");
+                }
+                this.orderRefund = res.data.data.orderRefund;
+            })
+        },
+        proData(pro) {
+            pro = pro.split(";");
+            let data = [];
+            for (let i = 0; i < pro.length; i++) {
+            data.push(pro[i].split(":")[1]);
+            }
+            return data.join(";");
+        },
+    },
+    filters:{
+        date(value) {
+            if (!value) { return '' };
+            let va = value.replace(/T/g, " ").substring(0,19)
+            return va;
+        },
+        two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+        },
+    }
+}
+</script>
+
+<style scoped>
+.refund-flow{
+    overflow:hidden;
+    padding: .32rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+.refund-flow>li{
+    width:25%;
+    float: left;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: 12px;
+    line-height: .48rem;
+    color: #333;
+    position: relative;
+    margin-top: .72rem;
+}
+.refund-flow>li.width{
+    width:50%;
+}
+.refund-flow>li>span{
+    color: #999;
+}
+.refund-flow>li>i{
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: -.5rem;
+    display: block;
+    left: 50%;
+    margin-left: -5px;
+    background: #999;
+    border-radius: 5px;
+    z-index: 20;
+}
+.refund-flow>li>b{
+    width: 2rem;
+    height: 3px;
+    position: absolute;
+    top: -.4rem;
+    display: block;
+    background: #999;
+    left: 50%;
+    z-index: 10;
+    margin-left: 5px
+
+}
+.refund-flow .red-bg{
+    background: #ec1019
+}
+.refund-flow>li:last-child>b{
+    display: none;
+}
+.refund-reason{
+    padding: .32rem;
+    overflow: hidden;
+    border-top: 1px solid #eee;
+}
+.refund-reason>li{
+    font-size: .36rem;
+    color: #999999;
+    line-height: .48rem;
+    overflow: hidden;
+
+}
+.refund-reason>li>span{
+    display: inline-block;
+    float: right;
+    word-wrap:break-word;
+    width: 6.9rem;
+}
+.refund-reason>li>.img-wrp{
+    margin-left: 1.6rem;
+    overflow: hidden;
+    margin-top: -.48rem;
+}
+.refund-reason>li>.img-wrp >img{
+    width: 1.44rem;
+    height: 1.44rem;
+    float: left;
+    margin-left: .2rem;
+    margin-top: .2rem;
+}
+.refunddetail{
+    background: #f7f7f7;
+}
+.wrp{
+    padding: 0 .32rem ;
+    overflow: hidden;
+    margin-bottom: .2rem;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+    box-sizing:border-box;
+    width:10rem;
+}
+.wrp>h2{
+     padding: 0 .32rem;
+    font-size: .4rem;
+    color: #333;
+    line-height: .92rem;
+    height: .92rem;
+    border-bottom: 1px solid #eee
+}
+.wrp>h2>span{
+    float: right;
+    color: #ec1019;
+
+}
+.all-order{
+    overflow: hidden;
+}
+.all-order>li{
+    box-sizing: border-box;
+    background: #fff;
+    font-size: .4rem;
+    color: #333;
+
+}
+.all-order>li>h3{
+    overflow:hidden;
+    box-sizing:border-box;
+    padding: 0.24rem  .28rem;
+    border-bottom: 1px solid #f4f4f4;
+    line-height: 0.68rem;
+}
+.all-order>li>h3>img{
+    width: 0.64rem;
+    height: 0.64rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1px solid #dedede;
+    float: left;
+    margin-right: 0.32rem;
+    display:inline-block;
+}
+.all-order>li>h3>span{
+    color: #ec1019;
+    float: right;
+}
+.good-wrp{
+    overflow: hidden;
+    padding:  .28rem;
+    box-sizing: border-box;
+    border-top: 1px solid #f4f4f4;
+}
+.good-wrp:nth-of-type(1){
+    border-top: 0
+}
+.good-wrp>img{
+    width: 1.44rem;
+    height: 1.44rem;
+    float: left;
+    margin-right: .2rem;
+}
+.good-wrp>p>span{
+    float: right;
+}
+.good-wrp>p>em{
+    max-width: 5.5rem;
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.refund>li>.good-wrp>p:nth-of-type(1) >span{
+    color: #999;
+}
+.refund>li>.good-wrp>p:nth-of-type(2) >span{
+    color: #ec1019;
+}
+.good-wrp>p:nth-of-type(1) >span{
+    color: #ec1019;
+}
+.good-wrp>p:nth-of-type(2){
+    color: #999;
+    margin-top: .36rem
+}
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-button {
+  background-color: #fff;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: #fff;
+}
+</style>

@@ -1,0 +1,275 @@
+<template>
+  <div>
+     <header>
+      <p>
+        <router-link to="/classify" tag="i" class="iconfont icon-fenlei2"></router-link>
+        <img src="../../assets/home/logo.png" alt="">
+        <router-link to="/center" tag="i" class="iconfont  icon-icon2"></router-link>
+      </p>
+      <router-link to="/search" tag="div" class="wraper-input">
+        <input type="text" placeholder="请输入关键词">
+        <i class="iconfont icon-sousuo2"></i>
+      </router-link>
+     </header>
+     <mt-swipe :auto="4000">
+        <mt-swipe-item>one</mt-swipe-item>
+        <mt-swipe-item>two</mt-swipe-item>
+        <mt-swipe-item>three</mt-swipe-item>
+      </mt-swipe>
+      <ul class="classify">
+        <li><img src="../../assets/home/youchujin.png" alt=""> <span>邮储金</span> </li>
+        <li><img src="../../assets/home/youchujin.png" alt=""> <span>纪念币</span></li>
+        <li><img src="../../assets/home/youchujin.png" alt=""> <span>礼品</span></li>        
+        <li><img src="../../assets/home/youchujin.png" alt=""> <span>分类</span></li>
+      </ul>
+      <h2 class="title"><i class="iconfont icon-aixin2"></i>推荐商品<span>更多<i class="iconfont icon-right"></i></span></h2>
+
+      <h2 class="title"><i class="iconfont icon-aixin2"></i>猜你喜欢</h2>
+      <ul class="youlike">
+          <li v-for="(item,index) in likeGood" :key="index">
+            <img :src="item.goodFirstPicUrl" alt="">
+            <p class="good-name">{{item.goodName | dot}}</p>
+            <p class="good-price">¥<i>{{item.goodSalePrice | two}}</i><span>重量：10K</span></p>
+          </li>
+          
+          
+      </ul>
+      <footer></footer>
+      <foot-Guide></foot-Guide>
+  </div>
+</template>
+
+<script>
+import { Swipe, SwipeItem } from "mint-ui";
+import footGuide from '../../components/footer/footGuide'
+
+export default {
+  data() {
+    return {
+      likeGood:[],
+      searchCondition:{
+        catId:0,
+        rows:10,
+        page: 1,
+        orderBy: 5,
+      }
+    };
+  },
+  components:{
+    footGuide,
+  },
+  created(){
+    this.getLikeGood();
+  },
+  methods:{
+    getLikeGood:function(){
+      this.$http.post('/api/good/goodlist', this.searchCondition).then(res => {
+          console.log(res);
+          this.likeGood = res.data.data;
+      })
+    }
+  },
+  filters:{
+    dot: function(value) {
+        if (!value) {
+            return value
+        } else {
+            if (value.length > 20) {
+                return value.slice(0,20) + '...'
+            } else {
+                    return value
+            }
+        }
+    },
+    two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+    },
+  }
+};
+</script>
+<style scoped>
+::-webkit-input-placeholder {
+  /* WebKit, Blink, Edge */
+  color: #999999;
+  font-size: .36rem
+}
+
+ :-moz-placeholder {
+  /* Mozilla Firefox 4 to 18 */
+  color: #999999;
+  font-size: .36rem
+}
+
+ ::-moz-placeholder {
+  /* Mozilla Firefox 19+ */
+  color: #999999;
+  font-size: .36rem
+}
+
+:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  color: #999999;
+  font-size: .36rem
+}
+.mint-swipe-item{
+  font-size: 3rem;
+  text-align: center;
+}
+footer{
+  height: 1.466667rem;
+}
+/*  */
+header {
+  height: 2.746667rem;
+  background: #e63835;
+  box-sizing: border-box;
+  padding: 0.36rem 0.666667rem;
+  position: fixed;
+  top: 0;
+  z-index: 100;
+  width: 10rem;
+
+
+}
+.mint-swipe{
+  margin-top: 2.746667rem;
+}
+header > p {
+  color: #fff;
+  height: 0.733333rem;
+  margin-bottom: 0.36rem;
+}
+header > p > i {
+  font-size: 0.626667rem;
+  position: relative;
+  top: -0.1rem;
+}
+header >p>i:last-child{
+
+  float: right;
+  top: 0.1rem;
+}
+header > p > img {
+  width: 4.213333rem;
+  height: 0.733333rem;
+  display: inline-block;
+  margin: 0 1.5rem;
+}
+/*  */
+/*  */
+.wraper-input {
+  position: relative;
+}
+.wraper-input > input {
+  height: 0.933333rem;
+  background: #fff;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 0.36rem;
+  border-radius: 10px;
+}
+.wraper-input > i {
+  font-size: 0.493333rem;
+  color: #a6a6a6;
+  position: absolute;
+  right: 0.36rem;
+  top: 0.24rem;
+}
+.mint-swipe {
+  height: 4.466667rem;
+  background: #ffa800;
+}
+/*  */
+/* 分类 */
+.classify {
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.32rem 1.12rem 0.32rem;
+}
+.classify > li {
+  float: left;
+  width: 1.92rem;
+  padding: 0 0.44rem;
+  box-sizing: border-box;
+}
+.classify > li > img {
+  width: 1.066667rem;
+  height: 1.066667rem;
+  border-radius: 50%;
+  margin-bottom: 0.2rem;
+}
+.classify > li > span {
+  display: block;
+  text-align: center;
+  font-size: 0.32rem;
+  color: #666666;
+}
+/* 分类 end*/
+/*  */
+.title {
+  height: 1rem;
+  line-height: 1rem;
+  font-size: 0.4rem;
+  padding: 0 0.32rem;
+  color: #333333;
+  box-sizing: border-box;
+  border-top: 1px solid #efefef;
+}
+.title > i {
+  color: #ef151f;
+  font-size: 0.4rem;
+  margin-right: 0.2rem;
+}
+.title > span {
+  float: right;
+  color: #666;
+  font-size: 0.36rem;
+}
+/*  */
+/* youlike */
+.youlike {
+  width: 100%;
+  overflow: hidden;
+}
+.youlike > li {
+  width: 50%;
+  box-sizing: border-box;
+  border-top: 1px solid #f4f4f4;
+  border-right: 1px solid #f4f4f4;
+  float: left;
+  padding: 0.32rem;
+}
+.youlike > li:nth-child(even) {
+  border-right: 0;
+}
+.youlike > li > img {
+  width: 100%;
+  height: 4.533333rem;
+}
+.youlike .good-name{
+  font-size: .4rem;
+  line-height: .5rem;
+  height: 1rem;
+  overflow: hidden;
+}
+.youlike .good-price{
+  color: #ef151f;
+  font-size: .32rem;
+  margin-top: .266667rem;
+  line-height: .5rem;
+}
+.youlike .good-price>span{
+  color: #999999;
+  float: right;
+}
+.youlike .good-price > i{
+  font-size: .45rem;
+  margin-left: 6px
+}
+/* youlike end */
+</style>
+
+

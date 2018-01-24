@@ -1,0 +1,102 @@
+<template>
+<div>
+    <ul class="top-bar">
+        <li :class="isred?'red':''" @click="changeall">全部</li>
+        <li @click="changeli1" :class="isedit?'red':''">编辑</li> 
+    </ul>   
+    <div v-for="n in 6" :key="n" class="item-wraper">
+        <img src="../../assets/home/yanshi.png" alt="">
+        <div class="text">
+            <p class="good-name">零兑金-好运常来手签...</p>
+            <p class="good-price"><i>¥1080</i><span>重量：10K</span> <i class="iconfont icon-shanchu" v-if="isedit"></i></p>
+        </div>       
+    </div>
+            
+</div>
+    
+</template>
+
+<script>
+export default {
+  data(){
+      return{
+          isred:true,
+          isedit:false,
+      }
+  },
+  methods:{
+      changeall(){
+          this.isedit = false;
+          this.isred = true;
+      },
+      changeli1(){
+          this.isred = false;
+          this.isedit = true;
+          
+      }
+      
+  }
+}
+</script>
+
+<style scoped>
+.top-bar{
+    display: flex;
+    overflow: hidden;
+}
+.top-bar >li{
+    flex: 1;
+    text-align: center;
+    height: .946667rem;
+    line-height: .946667rem;
+    font-size: .4rem;
+    box-sizing: border-box;
+}
+.top-bar >li.red{
+    color: #ec1019;
+    border-bottom: 2px solid #ec1019;
+}
+.item-wraper{
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.item-wraper>img{
+    width: 3.4rem;
+    height:2.64rem;
+    float: left;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee
+}
+.item-wraper .text{
+    float: left;
+    width: 6.6rem;
+    height:2.64rem;
+    background: #fff;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee;
+    padding: .4rem .32rem;
+    position: relative;
+}
+.item-wraper .good-name{
+    font-size: .4rem;
+}
+.item-wraper .good-price{
+    margin-top: 1rem;
+    color: #ef151f;
+    font-size: .32rem;
+    height: .5rem;
+    line-height: .5rem;
+}
+.item-wraper .good-price>span{
+  color: #999999;
+  margin-left: .32rem;
+}
+.item-wraper .good-price > i{
+  font-size: .45rem;
+}
+.item-wraper .good-price > i:nth-of-type(2){
+    float: right;
+    color: #999;
+}
+</style>

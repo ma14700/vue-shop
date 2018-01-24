@@ -1,0 +1,194 @@
+<template>
+    <div class="center">
+        <div class="top-red">
+            <img :src="userMessege.headImage" alt="">
+            <h2>{{userMessege.nickName}}</h2>
+
+
+        </div>
+        <div class="myorder">
+            <p class="order-text"><i class="iconfont icon-dingdan-80"></i> 我的订单
+                <span @click="pushOrder(0)">查看全部订单<i class="iconfont icon-right"></i></span>
+            </p>
+            <ul class="order-con">
+                <li @click="pushOrder(1)">
+                    <i class="iconfont icon-daifukuan"></i>
+                    <p>待付款</p>
+                </li>
+                <li @click="pushOrder(2)">
+                    <i class="iconfont icon-daifahuo"></i>
+                    <p>待发货</p>
+                 </li>
+                <li @click="pushOrder(3)">
+                    <i class="iconfont icon-shenhebijijishibenxiezi"></i>
+                    <p>待收货</p>
+                </li>
+                <li @click="pushOrder(4)">
+                    <i class="iconfont icon-shouhou"></i>
+                    <p>售后</p>
+                </li>
+            </ul>
+        </div>
+        <ul class="other-msg">
+            <router-link to="/address" tag="li"><i class="iconfont icon-dingwei blue"></i>收货地址管理<span class="iconfont icon-right"></span>
+            </router-link>
+            <router-link to="/collect" tag="li"><i class="iconfont icon-shoucang blue"></i>收藏商品（{{collectList.length}}）<span class="iconfont icon-right"></span></router-link>
+            <router-link to="/risk" tag="li"><i class="iconfont icon-fengxianpinggu green"></i>风险评估<span class="iconfont icon-right"></span>
+            </router-link>
+        </ul>
+        <ul class="other-msg">
+            <li><i class="iconfont icon-kefu1 orange"></i>客服电话<span class="iconfont icon-right"></span></li>
+            <!-- <li><i class="iconfont icon-bi yellow"></i>我的优惠券<span class="iconfont icon-right"></span></li> -->
+        </ul>
+        <footer></footer>
+        <foot-Guide></foot-Guide>
+    </div>
+</template>
+
+<script>
+import footGuide from '../../components/footer/footGuide'
+import { setStore, getStore, removeStore } from "../../config/mUtils";
+export default {
+    data() {
+        return {
+            collectList:[],
+            userMessege:[]
+        }
+    },
+    components:{
+        footGuide,
+    },
+    created(){
+        this.getCollect();
+        this.userMessege = JSON.parse(getStore('userInfo'));
+        console.log(this.userMessege);
+    },
+    methods:{
+        pushOrder(select){
+            setStore('selected',select);
+            this.$router.push('/order')
+        },
+        getCollect:function(){
+            this.$http.get('/api/userFavorite/userfavlist?favType=3').then(res=>{
+              this.collectList = res.data;
+          })
+        },
+    }
+
+}
+</script>
+
+
+<style scoped>
+.center{
+    background: #f7f7f7;
+}
+.top-red{
+    height:2.24rem ;
+    background: linear-gradient(to right, #e3232d 0%,#e74239 100%);
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: .48rem .32rem;
+    color: #fff;
+}
+.top-red>img{
+    width: 1.28rem;
+    height: 1.28rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border:1px solid #fff;
+    float: left;
+    margin-right: .24rem;
+}
+.top-red>h2{
+   font-size: .4rem;
+    line-height: .76rem;
+}
+.top-red>p{
+    font-size: .36rem;
+    line-height: .52rem;
+}
+footer{
+  height: 1.466667rem;
+}
+.myorder {
+    box-sizing: border-box;
+    overflow: hidden;
+    margin-bottom: .24rem;
+}
+.myorder .order-text {
+    padding: 0 .4rem;
+    line-height: 1.333333rem;
+    font-size: .4rem;
+    color: #333;
+    border-bottom: 1px solid #eeecf1;
+    background: #fff;
+}
+.myorder .order-text>i{
+    color: #ec1019
+}
+.myorder .order-text >span {
+    float: right;
+    font-size: .36rem;
+    color: #999;
+}
+.order-con {
+    padding: .4rem;
+    overflow: hidden;
+    margin-bottom: .4rem;
+    background: #fff;
+}
+.order-con> li {
+    float: left;
+    width: 25%;
+    text-align: center;
+    line-height: .733333rem;
+    font-size: .4rem;
+    color: #999;
+    border-right: 1px solid #eeecf1;
+    box-sizing: border-box;
+}
+.order-con li:last-child {
+    border-right: none;
+}
+.order-con >li >i {
+    font-size: .6rem;
+    color: #707070;
+}
+.other-msg{
+    overflow: hidden;
+    margin-bottom: .24rem;
+    padding: 0 .32rem;
+    background: #fff;
+}
+.other-msg>li{
+    height: 1.2rem;
+    line-height: 1.2rem;
+    font-size: .4rem;
+    border-top: 1px solid #eeecf1
+}
+.other-msg>li:first-child{
+    border-top:0;
+}
+.other-msg>li>i{
+    margin-right: .2rem;
+    font-size: 0.42rem;
+}
+.other-msg>li>i.blue{
+    color: #2e94fd
+}
+.other-msg>li>i.green{
+    color: #18bfa5
+}
+.other-msg>li>i.orange{
+    color: #f27900;
+    font-size: .42rem;
+    margin-right: .1rem;
+}
+.other-msg>li>i.yellow{
+    color: #f29f00
+}
+.other-msg>li>span{
+    float: right;
+}
+</style>

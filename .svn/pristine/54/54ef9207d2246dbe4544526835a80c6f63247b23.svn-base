@@ -1,0 +1,145 @@
+<template>
+<div>
+    <ul class="top-bar">
+        <li :class="{red:changeNum==0}" @click="changeall(0)">全部</li>
+        <li @click="changeall(1)"  :class="{red:changeNum==1}">编辑</li> 
+    </ul>   
+    <div v-for="(item,index) in collectList" :key="index" class="item-wraper" @click.stop="goDetail(item.goodInfoId)" v-if="collectList.length != 0">
+        <img :src="item.goodPicUrl" alt="">
+        <div class="text">
+            <p class="good-name">{{item.goodName |dot}}</p>
+            <p class="good-price"><i>¥{{item.goodPrice | two}}</i><span>重量：10K</span> <i class="iconfont icon-shanchu" v-if="changeNum==1" @click.stop="delCollectGood(item,index)"></i></p>
+        </div>       
+    </div>
+    <div class="blank-text" v-if="collectList.length == 0">
+        还没有收藏哦
+    </div>        
+</div>
+    
+</template>
+
+<script>
+import { MessageBox } from 'mint-ui';
+export default {
+  data(){
+      return{
+          changeNum:0,
+          collectList:[],
+      }
+  },
+  created(){
+      this.getCollect()
+  },
+  methods:{
+      changeall(index){
+          this.changeNum = index;
+      },
+      getCollect(){
+          this.$http.get('/api/userFavorite/userfavlist?favType=3').then(res=>{
+              this.collectList = res.data;
+              console.log(this.collectList);
+          })
+      },
+      delCollectGood(item,index){
+        MessageBox.confirm('确认移出收藏该商品么?', '').then(action => {
+                this.collectList.splice(index, 1);
+                this.$http.post("/api/userFavorite/userfavdel",
+                 { Id: item.id,
+                 FavType:3,
+                 FavToId:item.goodInfoId, }).then(res => {
+                })
+            });
+
+      },
+      goDetail(id){
+        this.$router.push({path:'/goodsdetail',query:{id}})
+      },
+  },
+  filters:{
+    dot: function(value) {
+        if (!value) {
+            return value
+        } else {
+            if (value.length > 13) {
+                return value.slice(0,13) + '...'
+            } else {
+                    return value
+            }
+        }
+    },
+    two: function(value) {
+            if (!value) { return '' };
+            return value.toFixed(2);
+    },
+  }
+}
+</script>
+
+<style scoped>
+.blank-text{
+    text-align: center;
+    font-size: .48rem;
+    color: #333;
+    min-height: 13.5rem;
+    line-height: 12rem
+}
+.top-bar{
+    display: flex;
+    overflow: hidden;
+}
+.top-bar >li{
+    flex: 1;
+    text-align: center;
+    height: .946667rem;
+    line-height: .946667rem;
+    font-size: .4rem;
+    box-sizing: border-box;
+}
+.top-bar >li.red{
+    color: #ec1019;
+    border-bottom: 2px solid #ec1019;
+}
+.item-wraper{
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+.item-wraper>img{
+    width: 3.4rem;
+    height:2.64rem;
+    float: left;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee
+}
+.item-wraper .text{
+    float: left;
+    width: 6.6rem;
+    height:2.64rem;
+    background: #fff;
+    box-sizing: border-box;
+    border: 1px solid #eeeeee;
+    padding: .4rem .32rem;
+    position: relative;
+}
+.item-wraper .good-name{
+    font-size: .4rem;
+}
+.item-wraper .good-price{
+    margin-top: 1rem;
+    color: #ef151f;
+    font-size: .32rem;
+    height: .5rem;
+    line-height: .5rem;
+}
+.item-wraper .good-price>span{
+  color: #999999;
+  margin-left: .32rem;
+}
+.item-wraper .good-price > i{
+  font-size: .45rem;
+}
+.item-wraper .good-price > i:nth-of-type(2){
+    float: right;
+    color: #999;
+}
+</style>

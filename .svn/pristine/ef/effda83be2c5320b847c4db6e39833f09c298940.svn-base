@@ -1,0 +1,72 @@
+import App from '../App'
+import Error from '@/components/Error'
+const home = r => require.ensure([], () => r(require('../page/home')), 'home')
+const classify = r => require.ensure([], () => r(require('../page/classify')), 'classify')
+const shopcart = r => require.ensure([], () => r(require('../page/shopcart')), 'shopcart')
+const center = r => require.ensure([], () => r(require('../page/center')), 'center')
+const goodslist = r => require.ensure([], () => r(require('../page/goodslist')), 'goodslist')
+const goodsdetail = r => require.ensure([], () => r(require('../page/goodsdetail')), 'goodsdetail')
+const search = r => require.ensure([], () => r(require('../page/search')), 'search')
+const submitorder = r => require.ensure([], () => r(require('../page/submitorder')), 'submitorder')
+const order = r => require.ensure([], () => r(require('../page/order')), 'order')
+const collect = r => require.ensure([], () => r(require('../page/collect')), 'collect')
+const address = r => require.ensure([], () => r(require('../page/address')), 'address')
+const editaddress = r => require.ensure([], () => r(require('../page/editaddress')), 'editaddress')
+
+export default [{
+        path: '',
+        redirect: '/home'
+    },
+    {
+        path: '/home',
+        component: home,
+    },
+    {
+        path: '/classify',
+        component: classify,
+    },
+    {
+        path: '/goodslist',
+        component: goodslist,
+    },
+    {
+        path: '/goodsdetail',
+        component: goodsdetail,
+    },
+    {
+        path: '/shopcart',
+        component: shopcart,
+    },
+    {
+        path: '/center',
+        component: center,
+    },
+    {
+        path: '/search',
+        component: search,
+    },
+    {
+        path: '/submitorder',
+        component: submitorder,
+    },
+    {
+        path: '/order',
+        component: order,
+    },
+    {
+        path: '/collect',
+        component: collect,
+    },
+    {
+        path: '/address',
+        component: address,
+    },
+    {
+        path: '/editaddress',
+        component: editaddress,
+    },
+    {
+        path: '*',
+        component: Error
+    }
+]

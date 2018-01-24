@@ -1,0 +1,321 @@
+<template>
+  <div class="editaddress">
+      <ul class="address-wrp">
+          <li><span>收&ensp;货&ensp;人</span><input type="text" v-model="address.receiverName"></li>
+          <li><span>手&ensp;机&ensp;号</span><input type="text" v-model="address.mobile"></li>
+          <li><span>省&ensp;市&ensp;区</span><input type="text" readonly="true" v-model="address.siteRegion" class="region"><i class="iconfont icon-right" @click="showRegionSelector"></i></li>
+          <li><span>详细地址</span><textarea name="" id="" v-model="address.address"></textarea></li>
+      </ul>
+      <div class="preserved" @click="conserve()">保存</div>
+      <mt-popup class="regionSelector" v-model="popupVisible" position="bottom">
+        <mt-picker :slots="regionSlots" value-key="text"  @change="onRegionChange" :showToolbar="showToolbar">
+        请选择所在城市
+          <mt-button class="selectBtn" type="primary" @click="selectRegion">确定</mt-button>
+        </mt-picker>
+      </mt-popup>
+  </div>
+</template>
+
+<script>
+import { setStore, getStore, removeStore } from "../../config/mUtils";
+import { regionData } from "../../config/regionData";
+import { Toast } from 'mint-ui';
+import { MessageBox } from 'mint-ui';
+import { Popup } from 'mint-ui';
+import { Picker } from 'mint-ui';
+export default {
+  data(){
+      return{
+        address:{
+          siteRegion:'请选择'
+         },
+        popupVisible:false,
+        regionSlots:0,
+        showToolbar:true,
+        isFirstSelect:0
+      }
+  },
+  mounted(){
+    this.$nextTick( function () {
+      if(!!!this.$route.query.id){
+        this.regionSlots[0].defaultIndex = 0;
+        this.regionSlots[2].defaultIndex = 0;
+        this.regionSlots[4].defaultIndex = 0;
+      }
+    })
+  },
+  created(){
+    this.initEdit();
+    var filter = function(s){
+      return {
+        text:s.text,
+        value:s.value,
+        children:s.children
+      }
+    };
+    var provice = regionData.map(filter);
+    var city = regionData[0].children.map(filter);
+    var country = regionData[0].children[0].children.map(filter);
+    this.regionSlots =[{
+          flex: 1,
+          values: provice,
+          defaultIndex:provice[0].value*1
+        }, {
+          divider: true,
+          content: '-'
+        }, {
+          flex: 1,
+          values: city,
+          defaultIndex:1
+        }, {
+          divider: true,
+          content: '-'
+        }, {
+          flex: 1,
+          values: country,
+          defaultIndex:5
+        }];
+  },
+  methods:{
+    initEdit(){
+      if(this.$route.query.id > 0){
+        this.$http.get('/api/revieve/address/'+ this.$route.query.id).then(res=>{
+            if(res.data.data == null){
+              MessageBox.alert('未找到对应的收货地址信息').then(action => {
+                  this.$router.push('/address');
+              });
+            }else{
+              this.address = res.data.data;
+              this.initSelector();
+            }
+        });
+      }
+    },
+    initSelector(){
+      var address = this.address.siteRegion.split(',');
+      var provinceIndex = regionData.findIndex(function(s) {
+        return s.text == address[0];
+      });
+      var cityIndex = regionData[provinceIndex].children.findIndex(function(s) {
+        return s.text == address[1];
+      });
+      var countryIndex = regionData[provinceIndex].children[cityIndex].children.findIndex(function(s) {
+        return s.text == address[2];
+      });
+
+      this.regionSlots[0].defaultIndex = provinceIndex;
+      this.regionSlots[2].values = regionData[provinceIndex].children;
+      this.regionSlots[2].defaultIndex = cityIndex;
+      this.regionSlots[4].values = regionData[provinceIndex].children[cityIndex].children;
+      this.regionSlots[4].defaultIndex = countryIndex;
+    },
+    conserve(){
+        if(!this.address.receiverName){
+                Toast({
+                    message: '请输入收货人',
+                    position: 'bottom',
+                    duration: 2000
+                });
+                return;
+            }
+             if(!this.address.mobile){
+                Toast({
+                    message: '请输入手机号码',
+                    position: 'bottom',
+                    duration: 2000
+                });
+                return;
+            }
+             if(!this.address.address){
+                  Toast({
+                    message: '请输入详情地址',
+                    position: 'bottom',
+                    duration: 2000
+                });
+                return;
+            }
+
+            if(this.$route.query.id > 0){
+
+                this.$http.put('/api/revieve/address/edit/'+this.editList.id,{
+                    Id:this.editList.id,
+                    receiverName:this.person,
+                    mobile:this.mobile,
+                    siteRegionId:this.editList.siteRegionId,
+                    address:this.detail,
+                    zipCode:this.editList.zipCode
+                }).then(res=>{
+                    if(res.data.message == "修改成功"){
+                        MessageBox.alert('修改成功').then(action => {
+                            this.$router.push('/address')
+                        });
+
+                    }else{
+                        MessageBox.alert('修改失败').then(action => {
+
+                        });
+                    }
+                })
+            }else{
+                this.$http.post('/api/revieve/address/create',{
+                    receiverName:this.address.receiverName,
+                    mobile:this.address.mobile,
+                    siteRegionId:this.address.siteRegionId,
+                    address:this.address.address,
+                    zipCode:''
+                }).then(res=>{
+                    if(res.data.success){
+                        MessageBox.alert('添加成功').then(action => {
+                            this.$router.push('/address');
+                        });
+                    }else{
+                        MessageBox.alert(res.data.message);
+                    }
+                })
+        }
+    },
+    showRegionSelector(){
+      this.popupVisible = !this.popupVisible;
+    },
+    onRegionChange(picker,values){
+      if(!!values[2])
+      {
+         picker.setSlotValues(1, values[0].children);
+         picker.setSlotValues(2, values[1].children);
+         this.address.siteRegionId = values[2].value;
+         this.address.siteRegion = values.map(function(s){
+           if(!!s) return s.text;
+         }).join(",");
+      }
+    },
+    selectRegion(){
+      this.popupVisible = false;
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* messagebox */
+.mint-msgbox-confirm{
+    color: #ec1019;
+    font-size: .4rem;
+}
+.mint-msgbox-cancel{
+    font-size: .4rem;
+}
+/* 弹出层 */
+.alert-msg {
+    position: fixed;
+    height: 1rem;
+    width: 6rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: .4rem;
+    text-align: center;
+    line-height: 1rem;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    border-radius: 0.2rem;
+    transition: .2s;
+}
+.editaddress{
+    background: #f7f7f7;
+}
+.address-wrp{
+    padding: 0 .32rem;
+    background: #fff;
+    overflow: hidden;
+    margin-bottom: .2rem;
+}
+.address-wrp>li{
+    height: 1.2rem;
+    line-height: 1.2rem;
+    font-size: .4rem;
+    border-bottom: 1px solid #f2f2f2
+}
+.address-wrp>li>input{
+    background: #f7f7f7;
+    border: none;
+    margin-left: .2rem;
+    padding-left: .2rem;
+    height: 1rem;
+    width: 7.2rem;
+}
+.address-wrp>li>input.region{
+  width: 5.5rem;
+  background-color: transparent;
+}
+
+.address-wrp>li>i{
+    float: right;
+}
+.address-wrp>li:last-child{
+   overflow: hidden;
+   height: auto;
+
+}
+.address-wrp>li>textarea{
+    width: 7.6rem;
+    height: 2rem;
+    border: none;
+    background: #f7f7f7;
+    box-sizing: border-box;
+    padding: .2rem;
+    margin: 0.2rem 0;
+    float:right;
+}
+.delete{
+    height: 1rem;
+    line-height: 1rem;
+    color: #ec1019;
+    background: #fff;
+    font-size: .4rem;
+    padding: 0 .32rem;
+    border-top: 1px solid #f2f2f2;
+    border-bottom: 1px solid #f2f2f2
+}
+.preserved{
+    height: 1.2rem;
+    font-size: .48rem;
+    color: #fff;
+    background: #ec1019;
+    text-align: center;
+    line-height: 1.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 10rem
+}
+.picker .picker-toolbar{
+  line-height: 1.2rem;
+  height: 1.2rem;
+  padding:0 0.28rem;
+  box-sizing: border-box;
+  text-align: left;
+  font-size:0.4rem;
+  background-color: #f7f7f7;
+  margin-bottom: 0.4rem;
+  position: relative;
+}
+.regionSelector{
+  min-height:8rem;
+  width: 100%;
+}
+.picker-item{
+  font-size:14px;
+}
+.selectBtn{
+  padding:0 0.4rem;
+  line-height:0.8rem;
+  height:0.8rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size:0.4rem;
+  color:#fff;
+  position: absolute;
+  background: #ec1019;
+  top: 0.2rem;
+  right:0.28rem;
+}
+</style>

@@ -1,0 +1,151 @@
+<template>
+  <div class="refund-wrp">
+      <div class="order-good">
+            <h2>
+                <img :src="orderInfo.supplierLogo" alt="">
+                {{orderInfo.supplierName}}
+            </h2>
+            <ul>
+                <li v-for="n in orderInfo.orderItem" :key="n.id">
+                    <img :src="n.itemPicUrl" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">{{n.itemName}}</p>
+                        <p class="order-gdinfo">重量：10g</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <ul class="reason-refund">
+            <li @click="reMoney">
+                <p><i class="iconfont icon-jintuikuan"></i>仅退款</p><b class="iconfont icon-right"></b>
+                <span>未收到货（包含未签收），或卖家协商同意下</span>
+            </li>
+            <li @click="reGood">
+                <p><i class="iconfont icon-tuihuo"></i>仅退货</p><b class="iconfont icon-right"></b>
+                <span>已收到货，需要退换已收到的货物</span>
+            </li>
+        </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      orderInfo:[],
+    };
+  },
+  created(){
+    this.getOrder();
+  },
+  methods: {
+    reMoney() {
+        let id = this.$route.query.id;
+        this.$router.push({path:'/remoney',query:{id}});
+    },
+    reGood() {
+        let id = this.$route.query.id;
+        this.$router.push({path:'/regood',query:{id}});
+    },
+    getOrder(){
+          this.$http.post('/api/neworder/detail/' + this.$route.query.id).then(res => {
+              console.log(res.data.data);
+              this.orderInfo = res.data.data;
+          })
+    
+    },
+  }
+};
+</script>
+
+<style scoped>
+
+/*  */
+.reason-refund {
+  padding:0  0.32rem ;
+  overflow: hidden;
+  margin-top: 0.2rem;
+  background: #fff;
+}
+.reason-refund > li {
+  overflow: hidden;
+  padding: .32rem 0;
+  position: relative;
+}
+.reason-refund > li:first-child{
+  border-bottom: 1px solid #eee;
+}
+.reason-refund > li > p {
+  font-size: 0.4rem;
+}
+.reason-refund > li > p > i {
+  color: #ec1019;
+  margin-right: 0.2rem;
+  font-size: 0.44rem;
+
+}
+.reason-refund > li > b {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  margin-top: -.2rem
+}
+.reason-refund > li > span {
+  margin-left: 0.64rem;
+  font-size: 0.36rem;
+  color: #999;
+  line-height: 0.48rem;
+
+  display: inline-block;
+}
+.refund-wrp {
+  background: #f7f7f7;
+}
+.order-good {
+  overflow: hidden;
+  padding: 0 0.32rem;
+  background: #fff;
+  margin-bottom: 0.2rem;
+}
+.order-good > h2 {
+  font-size: 0.4rem;
+  padding: 0.24rem 0;
+  line-height: 0.68rem;
+}
+.order-good > h2 > img {
+  width: 0.64rem;
+  height: 0.64rem;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid #dedede;
+  float: left;
+  margin-right: 0.32rem;
+}
+.order-good > ul > li:first-child {
+  border-top: 1px solid #dedede;
+}
+.order-good > ul > li {
+  /* border-bottom: 1px solid #dedede; */
+  padding: 0.24rem 0;
+  overflow: hidden;
+}
+.order-good > ul > li > img {
+  width: 1.44rem;
+  height: 1.44rem;
+  float: left;
+}
+.order-good > ul > li .gd-wrp {
+  float: left;
+  font-size: 0.36rem;
+  width: 7.7rem;
+  margin-left: 0.2rem;
+  line-height:.8rem;
+}
+.gd-wrp .order-gdname {
+  color: #333;
+}
+.gd-wrp .order-gdinfo {
+  color: #999;
+  line-height: 0.6rem;
+}
+</style>

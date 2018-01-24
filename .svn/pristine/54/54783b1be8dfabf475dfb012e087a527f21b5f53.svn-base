@@ -1,0 +1,201 @@
+<template>
+  <div qsearch>
+    <div class="qsearch">
+      <div class="qsearch-head">
+        <div class="head-left" @click="qsearchBack()">
+          <i class="iconfont icon-fanhui"></i>
+        </div>
+        <div class="head-right">
+          <input type="text" placeholder="请输入关键词" v-model="value" @blur="Seach" @keyup.enter="Seach">
+          <i class="iconfont icon-sousuo2 qsearch-enter" @click="Seach"></i>
+        </div>
+      </div>
+      <div class="qsearch-content">
+        <p>热门搜索</p>
+        <ul class="qsearch-content-title">
+          <li >邮储条</li>
+        </ul>
+      </div>
+      <div class="qsearch-content qsearch-content2 ">
+        <p>历史搜索</p>
+        <ul class="qsearch-content-title">
+          <li >邮储条 <i class="iconfont icon-cuohao" @click.stop="deleteSingle(index)"></i></li>
+        </ul>
+        <span class="clearall" >清空历史搜索</span>
+      </div>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      hotGoods: [],
+      value: '',
+    }
+  },
+
+  computed: {
+   
+  },
+  methods: {
+    Seach(){
+
+    },
+    qsearchBack() {
+      this.$router.back()
+    },
+    //传输热门商品
+    hotData() {
+    
+    },
+    goGoods(classifyId) {
+
+    
+    },
+    deleteSingle(){
+
+    }
+  },
+  created() {
+   
+  },
+}
+</script>
+
+<style scoped>
+.head-left {
+  width: 10%;
+  float: left;
+  height: .933333rem;
+  line-height: .933333rem;
+  margin-left: 2%;
+}
+
+.head-left i {
+  font-size: .56rem;
+  color: #afafaf
+}
+
+.head-right {
+  width: 85%;
+  float: right;
+  height: .933333rem;
+  line-height: .933333rem;
+  position: relative;
+  background: #f4f4f4;
+  border-radius: 5px;
+  margin-right: 3%;
+  color: #afafaf
+}
+
+.head-right input {
+  width: 90%;
+  height: .8rem;
+  padding: 0px;
+  border: none;
+  border-radius: 5px;
+  padding-left: 10px;
+  padding-right: 15%;
+  background: #f4f4f4;
+  box-sizing: border-box;
+  color: #a8a8a8;
+  font-size: 12px;
+  line-height: 0.8rem;
+}
+
+.qsearch-head {
+  margin-top: 10px;
+  height: .933333rem;
+}
+
+.qsearch {
+  width: 9.2rem;
+  margin: 0 auto;
+  min-height: 8rem;
+}
+
+.qsearch-enter {
+  position: absolute;
+  font-size: .453333rem;
+}
+
+.qsearch-content {
+  margin-top: .533333rem;
+  color: #a8a8a8;
+  overflow: hidden;
+}
+.qsearch-content>p{
+    font-size: .32rem;
+}
+.qsearch-content2{
+  min-height: 3rem;
+  overflow: visible;
+  position: relative;
+}
+.qsearch-content-title {
+  width: 100%;
+  margin-top: .4rem;
+  margin-left: 0.2rem;
+  overflow: hidden;
+  padding: .2rem 0;
+}
+
+.qsearch-content-title li {
+  width: auto;
+  margin-right: 4%;
+  float: left;
+  height: .666667rem;
+  line-height: .666667rem;
+  text-align: center;
+  padding:0 .32rem;
+  color: #a8a8a8;
+  border-radius: 3px;
+  margin-bottom: .266667rem;
+  position: relative;
+  background: #f4f4f4;
+  font-size: .36rem;
+}
+.qsearch-content-title li i{
+  position: absolute;
+  right: -.2rem;
+  top: -.3rem;
+}
+ .clearall{
+  display: block;
+  font-size: .4rem;
+  width: 50%;
+  text-align: center;
+  background: #eeecf1;
+  line-height: 1rem;
+  border-radius: .133333rem;
+  position: absolute;
+  bottom: -3rem;
+  left: 50%;
+  margin-left: -25%
+}
+::-webkit-input-placeholder {
+  /* WebKit, Blink, Edge */
+  color: #999999;
+  font-size: .36rem
+}
+
+ :-moz-placeholder {
+  /* Mozilla Firefox 4 to 18 */
+  color: #999999;
+  font-size: .36rem
+}
+
+ ::-moz-placeholder {
+  /* Mozilla Firefox 19+ */
+  color: #999999;
+  font-size: .36rem
+}
+
+ :-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  color: #999999;
+  font-size: .36rem
+}
+</style>
+

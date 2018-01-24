@@ -1,0 +1,662 @@
+<template>
+    <div class="submitorder">
+        <div class="address">
+            <h2>收货人：{{defaultAddress.receiverName}} <span>{{defaultAddress.mobile}}</span></h2>
+            <span>{{defaultAddress.siteRegion}} &nbsp;&nbsp;&nbsp;{{defaultAddress.address}}</span>
+            <p></p>
+            <i class="iconfont icon-right" @click="moreAddr()"></i>
+        </div>
+        <mt-popup v-model="addrVisible" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+            <div class="address-wraper">
+                <div class="order-address" v-for="(item,index) in addList" :key="index">
+                        <h2>{{item.receiverName}} <span>{{item.mobile}}</span> <i class="iconfont" :class="nowchoose==index?'icon-duigou':'icon-quan'" @click="chooseAddr(item,index)"></i></h2>
+                        <span>{{item.siteRegion}}{{item.address}}</span>
+
+                        <!-- <p>
+                            <span @click="querySet(item.id,index)"><i class="iconfont" :class="[item.isDefault?'icon-duigou':'icon-quan']"></i>设为默认</span>
+                            <span  @click="adddel(item.id)"><i class="iconfont icon-shanchu"></i>删除</span>
+                            <span @click="addedit(index)"><i class="iconfont icon-bi"></i>编辑</span>
+                        </p>
+                        <div class="bot" v-if="item.isDefault"></div> -->
+                </div>
+            </div>
+            <div style="height:1.2rem"></div>
+            <div class="add-new" >
+            <span @click="confirmAddr">确定</span> <span @click="addNew">添加新地址</span> 
+            </div>
+        </mt-popup>
+        <div class="order-good" v-for="(group,index) in orderGoodList" :key="index">
+            <h2>
+                <img :src="group.goodSupplierLogo" alt="">
+                {{group.goodSupplierName}}
+            </h2>
+            <ul>
+                <li v-for="(item,index) in group.shopCartItems" :key="index">
+                    <img :src="item.goodFirstPicUrl" alt="">
+                    <div class="gd-wrp">
+                         <p class="order-gdname">{{item.goodName | dot}}<span>¥{{item.skuPrice | two}}</span></p>
+                        <p class="order-gdinfo">{{proData(item.skuPropName)}}<span>×{{item.cartNum}}</span></p>
+                    </div>
+                    
+                </li>
+            </ul>
+        </div>
+        <ul class="other-wrp"  v-if="couponPostResult">
+            <li @click="handelClick('coupon')">品牌优惠<i class="iconfont icon-right"></i><i v-text="brandcoupon"></i></li>
+        </ul>
+        <ul class="other-wrp">
+            <li @click="handelClick('invoice')">发票抬头类型<i class="iconfont icon-right"></i><i v-text="invocetype"></i></li>
+            <li>发票抬头<input type="text"  v-model="InvoiceTitle"></li>
+            <li  v-if="ischooseinvoice" >添加税号<input type="text" placeholder="必填：请填写纳税人识别号" v-model="DutyNumber"></li>
+
+        </ul>
+        <ul class="other-wrp">
+            <li>买家留言<input type="text" placeholder="选填：对本次交易的留言" v-model="BuyerComments"></li>
+        </ul>
+        <mt-popup v-model="popupVisible" popup-transition="popup-fade" position="bottom" @touchmove.prevent>
+            <div class="coupon-wrp" v-if="model=='coupon'">
+                <h2>品牌优惠</h2>
+                <ul>
+                    <li v-for="(item,index) in couponList" :key="index">{{item}}<i class="iconfont " @click="chooseCoupon(index)" :class="ischoosecoupon==index?'icon-duigou':'icon-quan'"></i></li>
+                </ul>
+                <p @click="confirmO()">确认</p>
+            </div>
+            <div class="invoice-wrp coupon-wrp" v-if="model=='invoice'">
+                <h2>发票抬头类型</h2>
+                <ul>
+                    <li v-for="(i,index) in invoce" :key="index">{{i}}<i class="iconfont " @click="chooseInvoice(index)" :class="ischooseinvoice==index?'icon-duigou':'icon-quan'"></i></li>
+                </ul>
+                <p @click="confirmO()">确认</p>
+            </div>
+        </mt-popup>
+        <p class="total">共 &nbsp;{{totalNum}}&nbsp; 件商品&nbsp;&nbsp;&nbsp;&nbsp;合计：<span>¥{{totalPrice}}</span></p>
+        <div style="height:1.2rem;"></div>
+        <div class="bot-confirm">
+            <p>总计：<span>¥{{totalPrice}}</span></p>
+            <span @click="payConfirm">确认</span>
+        </div>
+    </div>
+</template>
+
+<script>
+import { Popup } from 'mint-ui';
+import { mapMutations, mapState } from 'vuex';
+import { MessageBox } from 'mint-ui';
+export default {
+    data() {
+        return {
+            model:'',
+            popupVisible:false,
+            addrVisible:false,
+            ischoosecoupon:0,
+            ischooseinvoice:0,
+            InvoiceType:1,
+            invocetype:'请选择',
+            brandcoupon:'请选择',
+            invoce:['个人','企业'],
+            orderGoodList:[],
+            couponList:['满100减10，最多减100 ','不使用优惠'],
+            couponPostResult:'',
+            ShopCartGuidList:[],
+            DutyNumber:'',
+            BuyerComments:'',
+            addList:[],//地址列表
+            defaultAddress:'',//默认地址
+            nowchoose:0,//当前选择的地址
+        }
+    },
+    created(){
+        this.GET_PLACE_ORDER();
+        this.orderGoodList =  this.placeOrder
+        var _this = this;
+        this.orderGoodList.map(function(i,s){
+            if(i==null){
+                _this.orderGoodList.splice(s, 1); 
+                
+            }
+        })
+        this.orderGoodList.map(function(i,s){
+            i.shopCartItems.map(function(g){
+                    _this.ShopCartGuidList.push(g.guid)
+            })
+        })
+        console.log(this.orderGoodList);
+        this.$http.post('/api/neworder/coupon/check').then(res=>{
+            this.couponPostResult = res.data.data;
+        });
+        this.getaddList();
+          
+    },
+    computed:{
+        ...mapState([
+            'placeOrder'
+        ]),
+        totalPrice: function() {
+            let totalprice = 0;
+            this.orderGoodList.forEach(function(s) {
+                s.shopCartItems.forEach(g=>{
+                        totalprice += g.cartNum * g.skuPrice;
+                })
+                
+            });
+            return totalprice.toFixed(2);
+        },
+        totalNum: function() {
+            let totalnum = 0;
+            this.orderGoodList.forEach(function(s) {
+                s.shopCartItems.forEach(g=>{
+                    totalnum  += parseInt(g.cartNum);
+                })
+            })
+            return totalnum;
+        },
+        InvoiceTitle:function(){
+            let name = this.defaultAddress.receiverName;
+            return name;
+        }
+    },
+    methods:{
+        ...mapMutations([
+            'GET_PLACE_ORDER','CLEAR_ORDER'
+        ]),
+        chooseAddr(item,i){
+            this.nowchoose = i;
+            this.defaultAddress = item;
+        },
+        getaddList(){ 
+            this.$http.get('/api/revieve/address/list').then(res=>{
+                console.log(res.data.data);
+                this.addList = res.data.data;
+                var _this = this;
+                this.addList.map(function(i){
+                    if(i.isDefault){
+                        _this.defaultAddress = i;
+                    }
+                });
+                console.log(this.defaultAddress);
+               
+            })
+        },
+        moreAddr(){
+           this.addrVisible = true;
+        },
+        confirmAddr(){
+            this.addrVisible = false;
+        },
+        // jsWechatPay(data) {
+        //     let _this = this;
+        //     WeixinJSBridge.invoke('getBrandWCPayRequest', data, function(res) {
+
+        //         if (res.err_msg == 'get_brand_wcpay_request:cancel') {
+        //             MessageBox({
+        //                 title: '支付失败',
+        //                 message: '支付遇到问题，请尝试重新支付',
+        //                 showCancelButton: true,
+        //                 confirmButtonText: '重新支付',
+        //                 closeOnClickModal: false
+        //             }).then(action => {
+
+        //             });
+        //         }
+        //         else if (res.err_msg == 'get_brand_wcpay_request:ok') {
+                   
+        //             MessageBox({
+        //                 title: '支付成功',
+        //                 message: '您的订单会尽快给您处理',
+        //                 confirmButtonText: '完成',
+        //                 closeOnClickModal: false
+        //             }).then(action => {
+        //                 _this.$router.push('/order');
+        //             });
+        //         }
+        //         else if (res.err_msg == 'get_brand_wcpay_request:fail') {
+        //             MessageBox({
+        //                 title: '支付失败',
+        //                 message: '支付网关出现错误，请稍后重试',
+        //                 confirmButtonText: '确定',
+        //                 closeOnClickModal: false
+        //             }).then(action => {
+
+        //             });
+        //         } else {
+        //             MessageBox({
+        //                 title: '支付失败',
+        //                 message: res.err_msg,
+        //                 confirmButtonText: '确定',
+        //                 closeOnClickModal: false
+        //             }).then(action => {
+
+        //             });
+        //         }
+        //     });
+        // },
+        payConfirm(){
+            var _this = this;
+            this.$http.post('/api/neworder/create', {
+                "UseDefaultCoupon": this.couponPostResult,
+                "ShopCartGuidList": this.ShopCartGuidList,
+                "ReceiveAddressId": this.defaultAddress.id,
+                "InvoiceType":this.InvoiceType,
+                "InvoiceTitle":this.InvoiceTitle,
+                "DutyNumber":this.DutyNumber,
+                "BuyerComments":this.BuyerComments
+                }).then(res=>{
+                    console.log(res.data);
+                    if(res.data.success){
+                        var MergerOrderNo = res.data.data;
+                        this.$http.post('/api/neworder/pay',{
+                            "MergerOrderNo":MergerOrderNo
+                        }).then(response=>{
+                            console.log(response,"dddd");
+                            if(response.data.success){
+                                MessageBox({
+                                    title: '支付接口测试',
+                                    message: response.data.message,
+                                    showCancelButton: true,
+                                    confirmButtonText: '确定支付',
+                                    closeOnClickModal: false
+                                }).then(action => {
+
+                                    _this.CLEAR_ORDER();
+                                    _this.$router.push('/order');
+                                });
+                                // let wxdataa = JSON.parse(res.data.message);
+                                // let package_list = wxdataa.package;
+                                // let sendData = {
+                                //     appId: wxdataa.appId,
+                                //     nonceStr: wxdataa.nonceStr,
+                                //     package: package_list,
+                                //     paySign: wxdataa.paySign,
+                                //     signType: wxdataa.signType,
+                                //     timeStamp: wxdataa.timeStamp
+                                // }
+                                // if (typeof WeixinJSBridge == "undefined") {
+                                //     if (document.addEventListener) {
+                                //         document.addEventListener('WeixinJSBridgeReady', function() { _this.jsWechatPay(sendData) }, false);
+                                //     }
+                                //     else if (document.attachEvent) {
+                                //         document.attachEvent('WeixinJSBridgeReady', function() { _this.jsWechatPay(sendData) });
+                                //         document.attachEvent('onWeixinJSBridgeReady', function() { _this.jsWechatPay(sendData) });
+                                //     }
+                                // } else {
+                                //     _this.jsWechatPay(sendData);
+                                // }
+                            }else{
+                                 MessageBox({
+                                    title: '支付失败',
+                                    message: '支付遇到问题，请尝试重新支付',
+                                    showCancelButton: true,
+                                    confirmButtonText: '重新支付',
+                                    closeOnClickModal: false
+                                }).then(action => {
+
+                                });
+                            }
+                        })
+                        
+                    }
+            })
+            
+        },
+        handelClick(p){
+            this.model = p;
+            this.popupVisible =true;
+            if(p=='invoice'){
+                this.invocetype = this.invoce[0];
+            }else{
+                this.brandcoupon =this.couponList[0];
+            }
+        },
+        chooseCoupon(i){
+            this.ischoosecoupon = i;
+            this.brandcoupon = this.couponList[i];
+            if(i == 1){
+                this.couponPostResult = false 
+            }
+            
+        },
+        chooseInvoice(i){
+            this.ischooseinvoice = i;
+            if(i==0){
+                this.InvoiceType =1  
+            }else{
+                 this.InvoiceType =2
+            }
+            this.invocetype = this.invoce[i];
+        },
+        confirmO(){
+            this.popupVisible = false;
+        },
+        addNew(){
+            this.$router.push('/editaddress')
+        },
+        proData(pro) {
+            pro = pro.split(";");
+            let data = [];
+            for (let i = 0; i < pro.length; i++) {
+            data.push(pro[i].split(":")[1]);
+            }
+            return data.join(";");
+        },
+    },
+    filters:{
+        dot: function(value) {
+            if (!value) {
+                return value
+            } else {
+                if (value.length > 15) {
+                    return value.slice(0,15) + '...'
+                } else {
+                        return value
+                }
+            }
+        },
+        two: function(value) {
+                if (!value) { return '' };
+                return value.toFixed(2);
+        },
+  }
+   
+   
+}
+</script>
+
+
+<style scoped>
+.coupon-wrp{
+    padding-top: .48rem;
+    color: #333;
+    min-height: 8.4rem;
+    position: relative;
+}
+.coupon-wrp>h2{
+    font-size: .44rem;
+    text-align: center;
+
+}
+.coupon-wrp>ul{
+    max-height: 5.8rem;
+    overflow-y: scroll;
+    overflow-x: hidden;;
+}
+.coupon-wrp>ul>li:first-child{
+    border-top: 0;
+}
+.coupon-wrp>ul>li{
+    padding: 0 .48rem;
+    font-size: .36rem;
+    box-sizing: border-box;
+    border-top: 1px solid #eee;
+    line-height: 1rem;
+    height: 1rem;
+}
+.coupon-wrp>ul>li>i{
+    float: right;
+}
+.coupon-wrp>ul>li>i.icon-duigou{
+    color: #ec1019;
+}
+.coupon-wrp>p{
+    height: 1.12rem;
+    background: #ec1019;
+    text-align: center;
+    color: #fff;
+    font-size: .44rem;
+    line-height: 1.12rem;
+    position: absolute;
+    bottom: 0;
+    width: 10rem;
+}
+.submitorder{
+    background: #f7f7f7;
+}
+.address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+}
+.address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.address >h2>span{
+    margin-left: .72rem;
+}
+.address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.address > p{
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+    
+}
+.address >i{
+    position: absolute;
+    right: .32rem;
+    top: .54rem;
+    font-weight: bold;
+    color: #999
+
+}
+.order-good{
+    overflow: hidden;
+    padding: 0 .32rem;
+    background: #fff;
+    margin-bottom: .2rem;
+}
+.order-good>h2{
+    font-size: .4rem;
+    padding:.24rem 0 ;
+    line-height: .68rem;
+    height:.68rem; 
+}
+.order-good>h2>img{
+    width: .64rem;
+    height: .64rem;
+    border-radius: 50%;
+    box-sizing: border-box;
+    border: 1px solid #dedede;
+    float: left;
+    margin-right: .32rem;
+}
+.order-good>ul>li:first-child{
+    border-top: 1px solid #dedede;
+}
+.order-good>ul>li{
+    border-bottom: 1px solid #dedede;
+    padding: .24rem 0;
+    overflow: hidden;
+}
+.order-good>ul>li>img{
+    width: 1.08rem;
+    height: 1.08rem;
+    float: left;
+}
+.order-good>ul>li .gd-wrp{
+    float: left;
+    font-size: .36rem;
+    width: 8.08rem;
+    margin-left: .2rem;
+}
+.gd-wrp .order-gdname{
+    color: #333;
+}
+.gd-wrp .order-gdname>span{
+    float: right;
+    color: #ec1019
+}
+.gd-wrp .order-gdinfo{
+    color: #999;
+    line-height: .6rem;
+}
+.gd-wrp .order-gdinfo>span{
+    float: right;
+    color: #333;
+}
+.order-good>ul>p{
+    font-size: .4rem;
+    text-align: right;
+    height: .946667rem;
+    line-height: .946667rem;
+}
+.order-good>ul>p>span{
+    color: #ec1019;
+}
+.bot-confirm{
+    height: 1.2rem;
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    width: 10rem;
+    z-index: 100;
+    left: 0;
+    box-sizing: border-box;
+    box-shadow: 0 0 1px #dedede;
+}
+.bot-confirm>span{
+    width: 2.52rem;
+    height: 1.2rem;
+    color: #fff;
+    background: #ec1019;
+    font-size: .48rem;
+    display: block;
+    float: right;
+    text-align: center;
+    line-height: 1.2rem;
+}
+.bot-confirm>p{
+    color: #ec1019;
+    font-size: .4rem;
+    display: inline;
+    line-height: 1.2rem;
+    padding-left: .32rem;
+}
+.bot-confirm>p>span{
+    font-size: .48rem;
+}
+.other-wrp{
+    overflow: hidden;
+    width: 10rem;
+    margin-bottom: .2rem;
+    background: #fff;
+    padding: 0 .32rem;
+    box-sizing: border-box;
+}
+.other-wrp>li{
+   overflow: hidden;
+    line-height: .96rem;
+    height: .96rem;
+    font-size: .36rem;
+    border-top: 1px solid #eee
+}
+.other-wrp>li:first-child{
+    border-top: 0
+}
+.other-wrp>li>i{
+    float: right;
+}
+.other-wrp>li>span{
+    margin-left: .44rem
+}
+.other-wrp>li>input{
+    margin-left: .44rem;
+    font-size: .36rem;
+    color: #333;
+    height: 100%;
+    border: none;
+    width: 7rem;
+}
+.total{
+    height: 1rem;
+    line-height: 1rem;
+    background: #fff;
+    padding: 0 .32rem;
+    text-align: right;
+    font-size: .36rem;
+
+}
+.total>span{
+    font-size: .4rem;
+    color: #ec1019;
+}
+.mint-popup{
+    width: 10rem;
+}
+/* 地址样式 */
+.address-wraper{
+    max-height: 10rem;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+.order-address{
+    background: #fff;
+    margin-bottom: .2rem;
+    overflow: hidden;
+    padding-top: .32rem;
+    position: relative;
+    border-top: 1px solid #eeeeee;
+    border-bottom: 1px solid #eeeeee;
+}
+.order-address >h2{
+    font-size: .4rem;
+    padding: 0 .32rem;
+    height: .6rem;
+    line-height: .6rem;
+}
+.order-address >h2>span{
+    margin-left: .72rem;
+}
+.order-address >h2>i{
+    float: right;
+    
+}
+.order-address >h2>i.icon-duigou{
+    color: #ec1019;
+}
+.order-address >span{
+    color: #999;
+    font-size: .36rem;
+    padding: 0 .32rem;
+    line-height: .54rem;
+}
+.order-address .bot{
+    background: url(../../assets/home/caixian.png);
+    background-size: 100% 100%;
+    width: 100%;
+    height: 10px;
+    
+}
+.add-new{
+    height: 1.2rem;
+    font-size: .48rem;
+    color: #fff;
+    background: #ec1019;
+    text-align: center;
+    line-height: 1.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 10rem
+}
+.add-new>span:nth-of-type(1){
+    background: #ec1019;
+}
+.add-new>span:nth-of-type(2){
+    background: #ec1000;
+}
+.add-new>span{
+    display: block;
+    float: left;
+    box-sizing: border-box;
+    width: 50%;
+
+}
+</style>

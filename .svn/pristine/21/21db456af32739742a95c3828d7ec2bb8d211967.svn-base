@@ -1,0 +1,157 @@
+<template>
+    <div class="shopcart">
+        <div class="shop" v-for="n in 3" :key="n">
+            <h2><i class="iconfont icon-quan"></i>金银纪念币系列</h2>
+            <ul>
+                <li v-for="n in 2" :key="n">
+                    <i class="iconfont icon-quan"></i>
+                    <img src="../../assets/home/yanshi.png" alt="">
+                    <div class="good-info">
+                        <p class="good-name">零兑金-好运常来手签封装银币</p>
+                        <p class="good-cly">材质：金银</p>
+                        <p class="input-wrp"><i>－</i><input type="text" readonly unselectable="on" v-model="goodnum"><i>＋</i></p>
+                    </div>
+                    <div class="right">
+                        <span>¥1018</span>
+                        <p>¥1018</p>
+                        <i class="iconfont icon-shanchu"></i>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <footer></footer>
+        <foot-Guide></foot-Guide>
+    </div>
+</template>
+
+<script>
+import footGuide from '../../components/footer/footGuide'
+export default {
+    data() {
+        return {
+            goodnum:1,
+        }
+    },
+    components:{
+        footGuide,
+    }
+   
+}
+</script>
+
+
+<style scoped>
+.shopcart{
+    background: #f7f7f7;
+}
+footer{
+  height: 1.466667rem;
+}
+.shop{
+    border-top: 1px solid #efefef;
+    border-bottom: 1px solid #efefef;
+    overflow: hidden;
+    margin-bottom: .2rem;
+    box-sizing: border-box;
+    background: #fff;
+}
+.shop>h2{
+    font-size: .4rem;
+    color: #333333;
+    height: .88rem;
+    line-height: .88rem;
+    box-sizing: border-box;
+    border-bottom: 1px solid #efefef;
+    padding: 0 .32rem;
+}
+.shop>h2>i{
+    margin-right: .2rem;
+    font-size: .48rem;
+}
+.shop>ul{
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 0 .32rem;
+}
+.shop>ul>li:first-child{
+    border: 0
+}
+.shop>ul>li{
+    border-top: 1px solid #efefef;
+    overflow: hidden;
+    padding: .32rem 0;
+}
+.shop>ul>li>i{
+   font-size: .48rem;
+    color: #333333;
+    float: left;
+    margin-top: .52rem;
+}
+.shop>ul>li>img{
+    width: 1.8rem;
+    height: 1.6rem;
+    float: left;
+    margin: 0 .2rem;
+}
+.shop>ul>li .good-info{
+    float: left;
+    width: 4.88rem;
+}
+.good-info .good-name{
+    font-size: .36rem;
+    color: #333333;
+    
+}
+.good-cly{
+    color: #999999;
+    font-size: .36rem;
+    line-height: .62rem;
+}
+.input-wrp{
+
+}
+.input-wrp>i{
+    display: block;
+    width: .6rem;
+    height: .6rem;
+    background: #f7f7f7;
+    float: left;
+    line-height: .6rem;
+    text-align: center;
+    color: #ec1019;
+}
+.input-wrp>i:first-child{
+    color: #333;
+}
+.input-wrp>input{
+    width: .8rem;
+    height: .6rem;
+    background: #f7f7f7;
+    float: left;
+    border: none;
+    text-align: center;
+    margin: 0 2px;
+    color: #333;
+}
+.good-name>span{
+    color: #ec1019;
+    float: right;
+}
+.shop>ul>li .right{
+    float: right;
+    text-align: right;
+}
+.shop>ul>li .right>span{
+    text-decoration: line-through;
+    color: #999
+}
+.shop>ul>li .right>p{
+    line-height: .62rem;
+    color: #ec1019;
+    font-size: .4rem;
+}
+.shop>ul>li .right>i{
+    font-size: .48rem;
+    color: #999
+}
+</style>

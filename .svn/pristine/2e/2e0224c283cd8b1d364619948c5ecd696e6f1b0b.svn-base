@@ -1,0 +1,311 @@
+<template>
+    <div class="shopcart">
+        <div class="shop" v-for="(group,index) in cartList" :key="index" v-if="group.goods.length != 0">
+            <h2><i class="iconfont icon-quan" @click="selectShop(group,index)" :class="group.isChecked?'icon-duigou':'icon-quan'"></i>{{group.shopname}}</h2>
+            <ul>
+                <li v-for="(item,_index) in group.goods" :key="_index">
+                    <i class="iconfont " @click="selectGood(item,index)" :class="item.isChecked?'icon-duigou':'icon-quan'"></i>
+                    <img src="../../assets/home/yanshi.png" alt="">
+                    <div class="good-info">
+                        <p class="good-name">{{item.name}}</p>
+                        <p class="good-cly">材质：金银</p>
+                        <p class="input-wrp">
+                            <i @click="reduceQuentity(item,index,_index)">－</i>
+                            <input type="text" readonly unselectable="on" v-model="item.num">
+                            <i @click="addQuentity(item)">＋</i></p>
+                    </div>
+                    <div class="right">
+                        <span>¥1018</span>
+                        <p>¥{{item.price}}</p>
+                        <i class="iconfont icon-shanchu" @click="delGood(item,index,_index)"></i>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="count">
+            <span >
+                <i class= "iconfont" @click="selectAll" :class="isSelectAll?'icon-duigou':'icon-quan'" v-show="!isSelectAll"></i>
+                <i class= "iconfont " @click="unselectAll" :class="isSelectAll?'icon-duigou':'icon-quan'"    v-show = "isSelectAll"></i>
+            全选</span>
+            
+            <span>¥{{totalPrice}}</span>
+            <div>结算（{{totalNum}}）</div>
+        </div>
+        <footer></footer>
+        <foot-Guide></foot-Guide>
+    </div>
+</template>
+
+<script>
+import footGuide from '../../components/footer/footGuide';
+import { MessageBox } from 'mint-ui';
+export default {
+    data() {
+        return {
+            goodnum:1,
+            flag:true,
+            isSelectAll:false,
+            cartList:[
+                {
+                    shopid:1,
+                    shopname:"金银金银",
+                    goods:[
+                        {
+                        goodid:1,
+                        name:"lallalalalla",
+                        price:10,
+                        num:1
+                        },
+                        {
+                            goodid:2,
+                            name:"哈哈哈",
+                            price:10,
+                            num:2
+                        }
+                    ]
+                },
+                {
+                    shopid:2,
+                    shopname:"金银金银啦啦啦",
+                    goods:[
+                        {
+                        goodid:32,
+                        name:"略略略",
+                        price:10,
+                        num:3
+                        },
+                        {
+                            goodid:21,
+                            name:"嘿嘿嘿",
+                            price:10,
+                            num:4
+                        }
+                    ]
+                }
+
+            ],
+        }
+    },
+    computed:{
+        totalPrice: function() {
+            let totalprice = 0;
+            this.cartList.forEach(function(s) {
+                s.goods.forEach(g=>{
+                    if (g.isChecked) {
+                        totalprice += g.num * g.price;
+                    }
+                })
+                
+            });
+            return totalprice.toFixed(2);
+        },
+        totalNum: function() {
+            let totalnum = 0;
+            this.cartList.forEach(function(s) {
+                s.goods.forEach(g=>{
+                    if (g.isChecked) {
+                        totalnum  += parseInt(g.num);
+                    }
+                })
+            })
+            return totalnum;
+        },
+    },
+    methods:{
+        selectGood:function(good,index){
+            this.$set(good, "isChecked", !!!good.isChecked);
+            let flag = true;
+            this.cartList[index].goods.forEach(function(g) {
+                    // console.log(g.isChecked);
+                    if(!g.isChecked){
+                        flag = false;
+                    }
+            });
+            this.$set(this.cartList[index], "isChecked", flag);
+        },
+        selectShop:function(shop,index){
+            this.$set(shop, "isChecked", !!!shop.isChecked);
+            if(!!shop.isChecked){
+                shop.goods.forEach((o) => {
+                this.$set(o, "isChecked", true);
+                })
+            }else{
+                shop.goods.forEach((o) => {
+                this.$set(o, "isChecked", false);
+                })
+            }
+        },
+        selectAll:function(){
+            var _this = this;
+            this.cartList.forEach(function(s) {
+                s.goods.forEach(g=>{
+                     _this.$set(g, "isChecked", true);
+                })
+                _this.$set(s, "isChecked", true);
+            })
+            this.isSelectAll = true;
+        },
+        unselectAll:function(){
+            var _this = this;
+            this.cartList.forEach(function(s) {
+                s.goods.forEach(g=>{
+                     _this.$set(g, "isChecked", false);
+                })
+                _this.$set(s, "isChecked", false);
+            })
+            this.isSelectAll = false;
+        },
+        addQuentity:function(item){
+            item.num++;
+        },
+        reduceQuentity:function(item,index,_index){
+            if(item.num != 1){
+                item.num--;
+            }else{
+                MessageBox.confirm('确认要删除该商品么?', '确认删除').then(action => {
+                    this.cartList[index].goods.splice(_index, 1);
+                });
+            }
+            
+            
+        },
+        delGood:function(item,index,_index){
+            MessageBox.confirm('确认要删除该商品么?', '确认删除').then(action => {
+                this.cartList[index].goods.splice(_index, 1);
+            });
+        }
+        
+
+    },
+    components:{
+        footGuide,
+    },
+    watch:{
+        
+    }
+   
+}
+</script>
+
+
+<style scoped>
+.shopcart{
+    background: #f7f7f7;
+}
+footer{
+  height: 1.466667rem;
+}
+.shop{
+    border-top: 1px solid #efefef;
+    border-bottom: 1px solid #efefef;
+    overflow: hidden;
+    margin-bottom: .2rem;
+    box-sizing: border-box;
+    background: #fff;
+}
+.shop>h2{
+    font-size: .4rem;
+    color: #333333;
+    height: .88rem;
+    line-height: .88rem;
+    box-sizing: border-box;
+    border-bottom: 1px solid #efefef;
+    padding: 0 .32rem;
+}
+.shop>h2>i{
+    margin-right: .2rem;
+    font-size: .48rem;
+}
+.shop>h2>i.icon-duigou{
+    color: #ec1019;
+}
+.shop>ul{
+    overflow: hidden;
+    box-sizing: border-box;
+    padding: 0 .32rem;
+}
+.shop>ul>li:first-child{
+    border: 0
+}
+.shop>ul>li{
+    border-top: 1px solid #efefef;
+    overflow: hidden;
+    padding: .32rem 0;
+}
+.shop>ul>li>i{
+   font-size: .48rem;
+    color: #333333;
+    float: left;
+    margin-top: .52rem;
+}
+.shop>ul>li>i.icon-duigou{
+    color: #ec1019;
+}
+.shop>ul>li>img{
+    width: 1.8rem;
+    height: 1.6rem;
+    float: left;
+    margin: 0 .2rem;
+}
+.shop>ul>li .good-info{
+    float: left;
+    width: 4.88rem;
+}
+.good-info .good-name{
+    font-size: .36rem;
+    color: #333333;
+    
+}
+.good-cly{
+    color: #999999;
+    font-size: .36rem;
+    line-height: .62rem;
+}
+.input-wrp{
+
+}
+.input-wrp>i{
+    display: block;
+    width: .6rem;
+    height: .6rem;
+    background: #f7f7f7;
+    float: left;
+    line-height: .6rem;
+    text-align: center;
+    color: #ec1019;
+}
+.input-wrp>i:first-child{
+    color: #333;
+}
+.input-wrp>input{
+    width: .8rem;
+    height: .6rem;
+    background: #f7f7f7;
+    float: left;
+    border: none;
+    text-align: center;
+    margin: 0 2px;
+    color: #333;
+}
+.good-name>span{
+    color: #ec1019;
+    float: right;
+}
+.shop>ul>li .right{
+    float: right;
+    text-align: right;
+}
+.shop>ul>li .right>span{
+    text-decoration: line-through;
+    color: #999
+}
+.shop>ul>li .right>p{
+    line-height: .62rem;
+    color: #ec1019;
+    font-size: .4rem;
+}
+.shop>ul>li .right>i{
+    font-size: .48rem;
+    color: #999
+}
+</style>

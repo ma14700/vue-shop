@@ -1,0 +1,197 @@
+<template>
+  <div class="editaddress">
+      <ul class="address-wrp">
+          <li>收货人<input type="text" v-model="person"></li>
+          <li>手机号<input type="text" v-model="tel"></li>
+          <li>省市区<i class="iconfont icon-right"></i></li>
+          <li>详细地址<textarea name="" id="" v-model="detail"></textarea></li>
+      </ul>
+      <p class="delete">删除地址</p>
+      <div class="preserved" @click="conserve()">保存</div>
+  </div>
+</template>
+
+<script>
+import { setStore, getStore, removeStore } from "../../config/mUtils";
+import { Toast } from 'mint-ui';
+import { MessageBox } from 'mint-ui';
+export default {
+  data(){
+      return{
+        editList:[],
+        person:null,
+        tel:null,
+        detail:null
+      }
+  },
+  created(){
+    this.haveAddress();
+  },
+  methods:{
+    haveAddress(){
+        if(this.$route.query.id == 1){
+            this.editList = JSON.parse(getStore('edit'));
+            this.person = this.editList.receiverName;
+            this.tel = this.editList.mobile;
+            this.detail = this.editList.address;
+            console.log(this.editList);
+        }
+       
+    },
+    conserve(){
+        if(!this.person || !this.mobile || !this.detail){
+            if(!this.person){
+                Toast({
+                    message: '请输入收货人',
+                    position: 'bottom',
+                    duration: 2000
+                });
+            }else if(!this.mobile){
+                Toast({
+                    message: '请输入手机号码',
+                    position: 'bottom',
+                    duration: 2000
+                });
+            }else if(!this.detail){
+                  Toast({
+                    message: '请输入详情地址',
+                    position: 'bottom',
+                    duration: 2000
+                });
+            }
+          
+        }else{
+            if(this.$route.query.id == 1){
+                this.editList.receiverName = this.person;
+                this.editList.mobile = this.tel;
+                this.editList.address = this.detail;
+                this.editList.Id = this.editList.id;
+                let edit = this.editList;
+                console.log(edit)
+                this.$http.put('/api/revieve/address/edit/'+this.editList.id,{
+                    Id:this.editList.id,
+                    receiverName:this.person,
+                    mobile:this.tel,
+                    siteRegionId:this.editList.siteRegionId,
+                    address:this.detail,
+                    zipCode:this.editList.zipCode
+                }).then(res=>{
+                    if(res.data.message == "修改成功"){
+                        MessageBox.alert('修改成功').then(action => {
+                            this.$router.push('/address')
+                        });
+                        
+                    }else{
+                        MessageBox.alert('修改失败').then(action => {
+                        
+                        });
+                    }
+                })
+            }else{
+                this.$http.post('/api/revieve/address/create',{
+                    receiverName:this.person,
+                    mobile:this.tel,
+                    siteRegionId:1533,
+                    address:this.detail,
+                    zipCode:450000
+                }).then(res=>{
+                    console.log(res.data.message);
+                    if(res.data.message == 'success'){
+                        MessageBox.alert('添加成功').then(action => {
+                            this.$router.push('/address')
+                        });
+                    }else{
+                        MessageBox.alert('添加失败').then(action => {
+                        
+                        });
+                    }
+                })
+            }
+        }
+        
+        
+    }
+  }
+}
+</script>
+
+<style scoped>
+/* 弹出层 */
+.alert-msg {
+    position: fixed;
+    height: 1rem;
+    width: 6rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    font-size: .4rem;
+    text-align: center;
+    line-height: 1rem;
+    top: 50%;
+    left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    border-radius: 0.2rem;
+    transition: .2s;
+}
+.editaddress{
+    background: #f7f7f7;
+}
+.address-wrp{
+    padding: 0 .32rem;
+    background: #fff;
+    overflow: hidden;
+    margin-bottom: .2rem;
+}
+.address-wrp>li{
+    height: 1.2rem;
+    line-height: 1.2rem;
+    font-size: .4rem;
+    border-bottom: 1px solid #f2f2f2
+}
+.address-wrp>li>input{
+    background: #f7f7f7;
+    border: none;
+    margin-left: .2rem;
+    padding-left: .2rem;
+    height: .6rem;
+    width: 7.5rem
+}
+.address-wrp>li>i{
+    float: right;
+}
+.address-wrp>li:last-child{
+   overflow: hidden;
+   height: auto;
+
+}
+.address-wrp>li>textarea{
+    
+    margin-left: 1.5rem;
+    width: 7.8rem;
+    height: 2rem;
+    border: none;
+    background: #f7f7f7;
+    box-sizing: border-box;
+    padding: .2rem;
+}
+.delete{
+    height: 1rem;
+    line-height: 1rem;
+    color: #ec1019;
+    background: #fff;
+    font-size: .4rem;
+    padding: 0 .32rem;
+    border-top: 1px solid #f2f2f2;
+    border-bottom: 1px solid #f2f2f2
+}
+.preserved{
+    height: 1.2rem;
+    font-size: .48rem;
+    color: #fff;
+    background: #ec1019;
+    text-align: center;
+    line-height: 1.2rem;
+    position: fixed;
+    bottom: 0;
+    width: 10rem
+}
+</style>
