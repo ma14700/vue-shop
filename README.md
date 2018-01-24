@@ -1,5 +1,5 @@
-# yiquanquan
-
+# 贵金属商城
+技术栈 three.js+vue-cli+vuex+mint ui
 > A Vue.js project
 
 ## Build Setup
